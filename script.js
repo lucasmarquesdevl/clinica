@@ -145,7 +145,9 @@ function renderDashboard() {
     if (!s.data) return;
     const [y, m] = s.data.split('-');
     if (y === anoAtual && m === mesAtual) {
-      (s.status === 'Pago' ? recMes : pendMes) += parseFloat(s.valor) || 0;
+      const valor = parseFloat(s.valor) || 0;
+      if (s.status === 'Pago') recMes += valor;
+      else pendMes += valor;
     }
   });
   u.$('stat-recebido').textContent = u.fmt(recMes, 'moeda');

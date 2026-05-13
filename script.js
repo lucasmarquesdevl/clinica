@@ -25,7 +25,7 @@ const u = {
       return s.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
     }
     if (t === 'moeda') return 'R$ ' + parseFloat(v || 0).toFixed(2).replace('.', ',');
-    if (t === 'data') return v ? v.split('-').reverse().join('/') : '';
+    if (t === 'data') return v ? v.split('T')[0].split('-').reverse().join('/') : '';
   },
   hide: (id, v = true) => {
     const el = u.$(id);

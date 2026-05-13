@@ -337,13 +337,13 @@ async function carregarConsultas() {
     .from('consultas')
     .select('*')
     .eq('psicologa_id', currentUser.id)
-    .order('dados', { ascending: true });
+    .order('data', { ascending: true });
 
   if (!error) {
     state.consultas = (data || []).map(c => ({
       id: c.id,
       pacienteId: c.paciente_id,
-      data: c.dados,
+      data: c.data,
       hora: c.hora,
       obs: c['observacao']
     }));
@@ -362,7 +362,7 @@ async function salvarConsulta() {
   const { error } = await _supabase.from('consultas').insert([{
     paciente_id: pacId,
     psicologa_id: currentUser.id,
-    dados: data,
+    data: data,
     hora: hora,
     'observacao': obs
   }]);
@@ -555,14 +555,14 @@ async function carregarSessoes() {
     .from('sessoes')
     .select('*')
     .eq('psicologa_id', currentUser.id)
-    .order('dados', { ascending: false });
+    .order('data', { ascending: false });
 
   if (!error) {
     state.sessoes = (data || []).map(s => ({
       id: s.id,
       pacienteId: s.paciente_id,
-      data: s.dados,
-      valor: s.valentia,
+      data: s.data,
+      valor: s.valor,
       status: s.status_pagamento ? 'Pago' : 'Pendente',
       receitaSaude: s.status_receita
     }));
@@ -593,8 +593,8 @@ async function salvarSessao() {
   const { error } = await _supabase.from('sessoes').insert([{
     paciente_id: pacId,
     psicologa_id: currentUser.id,
-    dados: data,
-    valentia: parseFloat(valor),
+    data: data,
+    valor: parseFloat(valor),
     status_pagamento: status === 'Pago',
     status_receita: false
   }]);

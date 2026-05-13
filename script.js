@@ -260,8 +260,8 @@ async function salvarPaciente() {
   }
 
   if (error) {
-    console.error("Erro ao salvar:", error);
-    u.toast('Erro ao salvar no banco.');
+    console.error("Erro ao salvar paciente:", error);
+    u.toast('Erro ao salvar no banco: ' + error.message);
   } else {
     u.toast(idx !== '' ? 'Paciente atualizado!' : 'Paciente cadastrado!');
     limparFormPaciente();
@@ -368,7 +368,8 @@ async function salvarConsulta() {
   }]);
 
   if (error) {
-    u.toast('Erro ao agendar.');
+    console.error("Erro ao agendar:", error);
+    u.toast('Erro ao agendar: ' + error.message);
   } else {
     ['ag-paciente', 'ag-data', 'ag-hora', 'ag-obs'].forEach(id => u.$(id).value = '');
     await carregarConsultas();
@@ -526,7 +527,10 @@ async function salvarProntuario() {
     texto: txt
   }]);
 
-  if (!error) {
+  if (error) {
+    console.error("Erro ao salvar prontuario:", error);
+    u.toast('Erro ao salvar anotação: ' + error.message);
+  } else {
     u.$('pront-texto').value = '';
     u.$('pront-data-sessao').value = '';
     await carregarProntuarios(pid);
@@ -595,7 +599,10 @@ async function salvarSessao() {
     status_receita: false
   }]);
 
-  if (!error) {
+  if (error) {
+    console.error("Erro ao salvar sessao:", error);
+    u.toast('Erro ao registrar sessão: ' + error.message);
+  } else {
     fecharModal();
     await carregarSessoes();
     u.toast('Sessão registrada!');

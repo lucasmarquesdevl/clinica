@@ -1,11 +1,10 @@
 // ====== CONFIGURAÇÃO ======
-const SUPABASE_URL = 'sb_publishable_Q_5d8n7AyzYjG3XofE0YnA_zXAcaUSv';
-const SUPABASE_KEY = 'sb_secret_QtdYBg2kEtdGDfwAq77l5w_feruNog_';
+const SUPABASE_URL = 'https://ezutgtfynlvbgbqmpqyb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6dXRndGZ5bmx2YmdicW1wcXliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NDMyODcsImV4cCI6MjA5NDIxOTI4N30.t1VcyLhhfe8n_l_YDUgkx6u-YGm_PpDG7lALE52loaE';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const USERS = {
-  // Adicione usuários aqui conforme necessário
-};
+// O USERS agora é opcional, pois usaremos o Supabase Auth para gerenciar os IDs e senhas.
+const USERS = {};
 
 // ====== STATE & UTILS ======
 let currentUser = null;
@@ -33,31 +32,46 @@ const u = {
 };
 
 // ====== LOGIN ======
-function fazerLogin(e) {
+async function fazerLogin(e) {
   e?.preventDefault?.();
-  const { email, senha, erroEl } = {
-    email: u.$('login-email').value,
-    senha: u.$('login-senha').value,
-    erroEl: u.$('login-erro')
-  };
-  const user = USERS[email];
+  const email = u.$('login-email').value;
+  const senha = u.$('login-senha').value;
+  const erroEl = u.$('login-erro');
 
-  if (user?.password === senha) {
-    currentUser = user;
+  // Login real no Supabase Auth
+  const { data, error } = await _supabase.auth.signInWithPassword({ email, password: senha });
+
+  if (error) {
+    erroEl.textContent = "E-mail ou senha incorretos.";
+    erroEl.style.display = 'block';
+    return;
+  }
+
+  // Busca os dados do perfil na tabela 'perfis'
+  const { data: perfil, error: perfilError } = await _supabase
+    .from('perfis')
+    .select('*')
+    .eq('id', data.user.id)
+    .single();
+
+  if (perfil) {
+    currentUser = { ...perfil, avatar: '👩‍⚕️' };
     sessionStorage.setItem('psicare_active_user', email);
-    loadUserData();
     updateUI();
     u.$('login-screen').style.display = 'none';
     u.$('app-wrapper').style.display = 'flex';
+    
+    await carregarTudo();
     renderDashboard();
     u.toast('Login realizado com sucesso!');
   } else {
-    erroEl.textContent = "E-mail ou senha incorretos.";
+    erroEl.textContent = "Perfil não configurado no banco.";
     erroEl.style.display = 'block';
   }
 }
 
-function fazerLogout() {
+async function fazerLogout() {
+  await _supabase.auth.signOut();
   sessionStorage.removeItem('psicare_active_user');
   currentUser = null;
   ['login-email', 'login-senha'].forEach(id => u.$(id).value = '');
@@ -68,10 +82,11 @@ function fazerLogout() {
 }
 
 function updateUI() {
-  u.$('user-nome').textContent = currentUser.name;
+  if (!currentUser) return;
+  u.$('user-nome').textContent = currentUser.nome;
   u.$('user-crp').textContent = `Psicóloga CRP ${currentUser.crp}`;
-  u.$('user-avatar').textContent = currentUser.avatar;
-  u.$$('.page-header h2')[0].textContent = `Bom dia, Dra. ${currentUser.name.split(' ')[1]} ✿`;
+  u.$('user-avatar').textContent = currentUser.avatar || '👩‍⚕️';
+  u.$$('.page-header h2')[0].textContent = `Bom dia, Dra. ${currentUser.nome.split(' ')[1] || currentUser.nome} ✿`;
 }
 
 function loadUserData() {
@@ -80,39 +95,10 @@ function loadUserData() {
   state = saved ? JSON.parse(saved) : { pacientes: [], consultas: [], sessoes: [], prontuarios: {}, anexos: {} };
   if (!state.prontuarios) state.prontuarios = {};
   if (!state.anexos) state.anexos = {};
-  if (currentUser.storageKey === "psicare_data_naty") seedDemoData();
 }
 
 function save() {
   currentUser && localStorage.setItem(currentUser.storageKey, JSON.stringify(state));
-}
-
-function seedDemoData() {
-  const hoje = new Date();
-  const fmt = d => d.toISOString().split('T')[0];
-  const m = (hoje.getMonth() + 1).toString().padStart(2, '0');
-  const y = hoje.getFullYear();
-
-  state.pacientes = [
-    { id: 1001, nome: 'Mariana Oliveira', cpf: '123.456.789-00', cpfResp: '', valor: 200, tel: '(11) 98765-4321' },
-    { id: 1002, nome: 'Pedro Henrique Costa', cpf: '987.654.321-00', cpfResp: '111.222.333-44', valor: 180, tel: '(11) 91234-5678' },
-    { id: 1003, nome: 'Sofia Ramos', cpf: '456.789.123-00', cpfResp: '', valor: 220, tel: '' },
-  ];
-
-  const d1 = new Date(hoje); d1.setDate(hoje.getDate() + 1);
-  const d2 = new Date(hoje); d2.setDate(hoje.getDate() + 3);
-  state.consultas = [
-    { id: 201, pacienteId: 1001, data: fmt(d1), hora: '09:00', obs: 'Online' },
-    { id: 202, pacienteId: 1002, data: fmt(d2), hora: '14:30', obs: 'Presencial' },
-    { id: 203, pacienteId: 1003, data: fmt(hoje), hora: '11:00', obs: 'Presencial' },
-  ];
-
-  state.sessoes = [
-    { id: 301, pacienteId: 1001, data: `${y}-${m}-02`, valor: 200, status: 'Pago', receitaSaude: true },
-    { id: 302, pacienteId: 1002, data: `${y}-${m}-05`, valor: 180, status: 'Pago', receitaSaude: false },
-    { id: 303, pacienteId: 1003, data: `${y}-${m}-08`, valor: 220, status: 'Pendente', receitaSaude: false },
-    { id: 304, pacienteId: 1001, data: `${y}-${m}-10`, valor: 200, status: 'Pendente', receitaSaude: false },
-  ];
 }
 
 // ====== NAVIGATION ======
@@ -184,27 +170,87 @@ function renderList(id, items, render, emptyMsg) {
   el.innerHTML = items.length ? items.map(render).join('') : `<p style="color:var(--ink-soft);font-size:.85rem;">${emptyMsg}</p>`;
 }
 
+async function carregarTudo() {
+  if (!currentUser) return;
+  await carregarPacientes();
+  await Promise.all([
+    carregarConsultas(),
+    carregarSessoes()
+  ]);
+}
+
 // ====== PACIENTES ======
-function salvarPaciente() {
-  const form = { nome, cpf, cpfResp: cpfR, valor, tel } = {
-    nome: u.$('pac-nome').value.trim(),
-    cpf: u.$('pac-cpf').value.trim(),
-    cpfR: u.$('pac-cpf-resp').value.trim(),
-    valor: u.$('pac-valor').value,
-    tel: u.$('pac-tel').value.trim(),
-  };
+async function carregarPacientes() {
+  if (!currentUser) return;
+
+  const { data, error } = await _supabase
+    .from('pacientes')
+    .select('*')
+    .eq('psicologa_id', currentUser.id)
+    .order('nome', { ascending: true });
+
+  if (error) {
+    console.error("Erro ao carregar pacientes:", error);
+    u.toast('Erro ao carregar pacientes.');
+  } else {
+    state.pacientes = (data || []).map(p => ({
+      id: p.id,
+      nome: p.nome,
+      cpf: p.cpf,
+      cpfResp: p.cpf_responsavel,
+      valor: p.valor_sessao,
+      tel: p.telefone
+    }));
+    renderPacientes();
+    populatePacienteSelects();
+  }
+}
+
+async function salvarPaciente() {
+  const nome = u.$('pac-nome').value.trim();
+  const cpf = u.$('pac-cpf').value.trim();
+  const cpfR = u.$('pac-cpf-resp').value.trim();
+  const valor = u.$('pac-valor').value;
+  const tel = u.$('pac-tel').value.trim();
   const idx = u.$('pac-edit-idx').value;
 
-  if (!form.nome || !form.cpf || !form.valor) { u.toast('Preencha os campos obrigatórios.'); return; }
-
-  if (idx) {
-    state.pacientes[parseInt(idx)] = { ...state.pacientes[parseInt(idx)], ...form };
-    u.toast('Paciente atualizado!');
-  } else {
-    state.pacientes.push({ id: Date.now(), ...form });
-    u.toast('Paciente cadastrado!');
+  if (!nome || !cpf || !valor) {
+    u.toast('Preencha os campos obrigatórios.');
+    return;
   }
-  save(); limparFormPaciente(); renderPacientes();
+
+  const dadosPaciente = {
+    nome: nome,
+    cpf: cpf,
+    cpf_responsavel: cpfR,
+    valor_sessao: parseFloat(valor),
+    telefone: tel,
+    psicologa_id: currentUser.id
+  };
+
+  let error;
+  if (idx !== '') {
+    const idDoBanco = state.pacientes[parseInt(idx)].id;
+    const { error: updateError } = await _supabase
+      .from('pacientes')
+      .update(dadosPaciente)
+      .eq('id', idDoBanco);
+    error = updateError;
+  } else {
+    const { error: insertError } = await _supabase
+      .from('pacientes')
+      .insert([dadosPaciente]);
+    error = insertError;
+  }
+
+  if (error) {
+    console.error("Erro ao salvar:", error);
+    u.toast('Erro ao salvar no banco.');
+  } else {
+    u.toast(idx !== '' ? 'Paciente atualizado!' : 'Paciente cadastrado!');
+    limparFormPaciente();
+    await carregarPacientes();
+  }
 }
 
 function limparFormPaciente() {
@@ -225,8 +271,22 @@ function editarPaciente(idx) {
   window.scrollTo(0, 0);
 }
 
-function excluirPaciente(idx) {
-  confirm('Excluir este paciente?') && (state.pacientes.splice(idx, 1), save(), renderPacientes());
+async function excluirPaciente(idx) {
+  if (!confirm('Excluir este paciente?')) return;
+
+  const idDoBanco = state.pacientes[idx].id;
+  const { error } = await _supabase
+    .from('pacientes')
+    .delete()
+    .eq('id', idDoBanco);
+
+  if (error) {
+    console.error("Erro ao excluir:", error);
+    u.toast('Erro ao excluir do banco.');
+  } else {
+    u.toast('Paciente excluído!');
+    await carregarPacientes();
+  }
 }
 
 function renderPacientes() {
@@ -255,6 +315,60 @@ function renderPacientes() {
 }
 
 // ====== AGENDA ======
+async function carregarConsultas() {
+  if (!currentUser) return;
+  const { data, error } = await _supabase
+    .from('consultas')
+    .select('*')
+    .eq('psicologa_id', currentUser.id)
+    .order('dados', { ascending: true });
+
+  if (!error) {
+    state.consultas = (data || []).map(c => ({
+      id: c.id,
+      pacienteId: c.paciente_id,
+      data: c.dados,
+      hora: c.hora,
+      obs: c['observação']
+    }));
+    renderConsultas();
+  }
+}
+
+async function salvarConsulta() {
+  const pacId = u.$('ag-paciente').value;
+  const data = u.$('ag-data').value;
+  const hora = u.$('ag-hora').value;
+  const obs = u.$('ag-obs').value.trim();
+
+  if (!pacId || !data || !hora) { u.toast('Preencha todos os campos.'); return; }
+
+  const { error } = await _supabase.from('consultas').insert([{
+    paciente_id: pacId,
+    psicologa_id: currentUser.id,
+    dados: data,
+    hora: hora,
+    'observação': obs
+  }]);
+
+  if (error) {
+    u.toast('Erro ao agendar.');
+  } else {
+    ['ag-paciente', 'ag-data', 'ag-hora', 'ag-obs'].forEach(id => u.$(id).value = '');
+    await carregarConsultas();
+    u.toast('Consulta agendada!');
+  }
+}
+
+async function excluirConsulta(id) {
+  if(!confirm('Excluir esta consulta?')) return;
+  const { error } = await _supabase.from('consultas').delete().eq('id', id);
+  if (!error) {
+    await carregarConsultas();
+    u.toast('Consulta excluída.');
+  }
+}
+
 function populatePacienteSelects() {
   ['ag-paciente', 'sess-paciente', 'pront-paciente', 'fin-filter-pac'].forEach(id => {
     const el = u.$(id);
@@ -268,28 +382,6 @@ function populatePacienteSelects() {
       el.appendChild(opt);
     });
   });
-}
-
-function salvarConsulta() {
-  const { pacId, data, hora, obs } = {
-    pacId: u.$('ag-paciente').value,
-    data: u.$('ag-data').value,
-    hora: u.$('ag-hora').value,
-    obs: u.$('ag-obs').value.trim(),
-  };
-  if (!pacId || !data || !hora) { u.toast('Preencha todos os campos.'); return; }
-
-  state.consultas.push({ id: Date.now(), pacienteId: parseInt(pacId), data, hora, obs });
-  save();
-  ['ag-paciente', 'ag-data', 'ag-hora', 'ag-obs'].forEach(id => u.$(id).value = '');
-  renderConsultas();
-  u.toast('Consulta agendada!');
-}
-
-function excluirConsulta(id) {
-  state.consultas = state.consultas.filter(c => c.id !== id);
-  save();
-  renderConsultas();
 }
 
 function renderConsultas() {
@@ -333,8 +425,58 @@ function renderConsultas() {
 }
 
 // ====== PRONTUÁRIO ======
-function populateProntSelect() {
-  populatePacienteSelects();
+function populateProntSelect() { populatePacienteSelects(); }
+
+async function carregarProntuarios(pid) {
+  if (!pid) return;
+  const { data, error } = await _supabase
+    .from('prontuários')
+    .select('*')
+    .eq('paciente_id', pid)
+    .order('data_sessao', { ascending: false });
+
+  if (!error) {
+    state.prontuarios[pid] = (data || []).map(h => ({
+      data: h.data_sessao,
+      texto: h.texto,
+      ts: h.id
+    }));
+    renderHistoricoProntuario(pid);
+  }
+}
+
+async function carregarAnexos(pid) {
+  if (!pid) return;
+  const { data, error } = await _supabase.storage.from('DOCUMENTOS-PACIENTES').list(pid);
+  
+  if (!error) {
+    state.anexos[pid] = (data || []).map(f => ({
+      nome: f.name,
+      url: _supabase.storage.from('DOCUMENTOS-PACIENTES').getPublicUrl(`${pid}/${f.name}`).data.publicUrl
+    }));
+    
+    u.$('anexos-lista').innerHTML = state.anexos[pid]
+      .map(a => `<a href="${a.url}" target="_blank" class="file-link" style="display:inline-flex;align-items:center;gap:6px;background:var(--blush);border-radius:6px;padding:4px 10px;font-size:.78rem;margin:3px;text-decoration:none;color:inherit;">📎 ${a.nome}</a>`)
+      .join('');
+  }
+}
+
+async function fazerUploadAnexo(input) {
+  const pid = u.$('pront-paciente').value;
+  if (!pid) { u.toast('Selecione o paciente primeiro.'); return; }
+
+  const files = input.files;
+  for (const file of files) {
+    const path = `${pid}/${file.name}`;
+    const { error } = await _supabase.storage.from('DOCUMENTOS-PACIENTES').upload(path, file, {
+      upsert: true
+    });
+    if (error) console.error("Erro no upload:", error);
+  }
+
+  await carregarAnexos(pid);
+  u.toast('Arquivo(s) anexado(s)!');
+  input.value = '';
 }
 
 function carregarProntuario() {
@@ -350,93 +492,133 @@ function carregarProntuario() {
   area.style.display = 'block';
   u.$('pront-texto').value = '';
   u.$('pront-data-sessao').value = '';
-  renderHistoricoProntuario(pid);
+  carregarProntuarios(pid);
+  carregarAnexos(pid);
 }
 
-function salvarProntuario() {
+async function salvarProntuario() {
   const pid = u.$('pront-paciente').value;
   const txt = u.$('pront-texto').value.trim();
   const data = u.$('pront-data-sessao').value.trim();
 
   if (!pid || !txt) { u.toast('Selecione o paciente e escreva a anotação.'); return; }
 
-  if (!state.prontuarios[pid]) state.prontuarios[pid] = [];
-  state.prontuarios[pid].push({ data: data || new Date().toLocaleDateString('pt-BR'), texto: txt, ts: Date.now() });
-  save();
-  u.$('pront-texto').value = '';
-  u.$('pront-data-sessao').value = '';
-  renderHistoricoProntuario(pid);
-  u.toast('Anotação salva!');
+  const { error } = await _supabase.from('prontuários').insert([{
+    paciente_id: pid,
+    psicologa_id: currentUser.id,
+    data_sessao: data || new Date().toISOString().split('T')[0],
+    texto: txt
+  }]);
+
+  if (!error) {
+    u.$('pront-texto').value = '';
+    u.$('pront-data-sessao').value = '';
+    await carregarProntuarios(pid);
+    u.toast('Anotação salva!');
+  }
 }
 
 function renderHistoricoProntuario(pid) {
-  const hist = (state.prontuarios[pid] || []).slice().reverse();
+  const hist = state.prontuarios[pid] || [];
   const el = u.$('pront-historico');
 
   el.innerHTML = hist.length ? hist.map(h => `<div style="border-bottom:1px solid var(--border);padding:14px 0;">
-    <div style="font-size:.78rem;font-weight:600;color:var(--primary);margin-bottom:5px;">📅 ${h.data}</div>
+    <div style="font-size:.78rem;font-weight:600;color:var(--primary);margin-bottom:5px;">📅 ${u.fmt(h.data, 'data')}</div>
     <p style="font-size:.88rem;line-height:1.6;white-space:pre-wrap;">${h.texto}</p></div>`).join('')
     : '<p style="color:var(--ink-soft);font-size:.85rem;">Nenhuma anotação registrada.</p>';
 }
 
-function simularAnexo(input) {
-  const pid = u.$('pront-paciente').value;
-  if (!pid) { u.toast('Selecione o paciente primeiro.'); return; }
+// ====== FINANCEIRO ======
+async function carregarSessoes() {
+  if (!currentUser) return;
+  const { data, error } = await _supabase
+    .from('sessoes')
+    .select('*')
+    .eq('psicologa_id', currentUser.id)
+    .order('dados', { ascending: false });
 
-  if (!state.anexos[pid]) state.anexos[pid] = [];
-  Array.from(input.files).forEach(f => {
-    state.anexos[pid].push({ nome: f.name, size: f.size, data: new Date().toLocaleDateString('pt-BR') });
-  });
-  save();
-
-  u.$('anexos-lista').innerHTML = (state.anexos[pid] || [])
-    .map(a => `<div style="display:inline-flex;align-items:center;gap:6px;background:var(--blush);border-radius:6px;padding:4px 10px;font-size:.78rem;margin:3px;">📎 ${a.nome}</div>`)
-    .join('');
-  u.toast('Arquivo(s) anexado(s)!');
-  input.value = '';
+  if (!error) {
+    state.sessoes = (data || []).map(s => ({
+      id: s.id,
+      pacienteId: s.paciente_id,
+      data: s.dados,
+      valor: s.valentia,
+      status: s.status_pagamento ? 'Pago' : 'Pendente',
+      receitaSaude: s.status_receita
+    }));
+    renderFinanceiro();
+  }
 }
 
-// ====== FINANCEIRO ======
 function abrirModalSessao() {
-  populatePacienteSelects();
-  u.$('modal-overlay').style.display = 'flex';
   u.$('sess-data').value = new Date().toISOString().split('T')[0];
+  u.$('modal-overlay').style.display = 'flex';
 }
 
 function fecharModal() {
   u.$('modal-overlay').style.display = 'none';
+  ['sess-paciente', 'sess-valor', 'sess-data'].forEach(id => u.$(id).value = '');
 }
 
-function salvarSessao() {
-  const { pid, data, valor, stat } = {
-    pid: u.$('sess-paciente').value,
+async function salvarSessao() {
+  const { pacId, data, valor, status } = {
+    pacId: u.$('sess-paciente').value,
     data: u.$('sess-data').value,
     valor: u.$('sess-valor').value,
-    stat: u.$('sess-status').value,
+    status: u.$('sess-status').value,
   };
-  if (!pid || !data || !valor) { u.toast('Preencha todos os campos.'); return; }
 
-  state.sessoes.push({ id: Date.now(), pacienteId: parseInt(pid), data, valor: parseFloat(valor), status: stat, receitaSaude: false });
-  save();
-  fecharModal();
-  renderFinanceiro();
-  u.toast('Sessão registrada!');
+  if (!pacId || !data || !valor) { u.toast('Preencha os campos obrigatórios.'); return; }
+
+  const { error } = await _supabase.from('sessoes').insert([{
+    paciente_id: pacId,
+    psicologa_id: currentUser.id,
+    dados: data,
+    valentia: parseFloat(valor),
+    status_pagamento: status === 'Pago',
+    status_receita: false
+  }]);
+
+  if (!error) {
+    fecharModal();
+    await carregarSessoes();
+    u.toast('Sessão registrada!');
+  }
 }
 
-function toggleStatus(id) {
-  const s = state.sessoes.find(s => s.id === id);
-  s && (s.status = s.status === 'Pago' ? 'Pendente' : 'Pago', save(), renderFinanceiro());
+async function toggleStatus(id) {
+  const sessao = state.sessoes.find(s => s.id === id);
+  if (!sessao) return;
+
+  const novoStatus = sessao.status === 'Pago' ? false : true;
+  const { error } = await _supabase
+    .from('sessoes')
+    .update({ status_pagamento: novoStatus })
+    .eq('id', id);
+
+  if (!error) await carregarSessoes();
 }
 
-function toggleReceita(id) {
-  const s = state.sessoes.find(s => s.id === id);
-  s && (s.receitaSaude = !s.receitaSaude, save(), renderFinanceiro());
+async function toggleReceita(id) {
+  const sessao = state.sessoes.find(s => s.id === id);
+  if (!sessao) return;
+
+  const novoRec = !sessao.receitaSaude;
+  const { error } = await _supabase
+    .from('sessoes')
+    .update({ status_receita: novoRec })
+    .eq('id', id);
+
+  if (!error) await carregarSessoes();
 }
 
-function excluirSessao(id) {
-  state.sessoes = state.sessoes.filter(s => s.id !== id);
-  save();
-  renderFinanceiro();
+async function excluirSessao(id) {
+  if(!confirm('Excluir esta sessão?')) return;
+  const { error } = await _supabase.from('sessoes').delete().eq('id', id);
+  if (!error) {
+    await carregarSessoes();
+    u.toast('Sessão excluída.');
+  }
 }
 
 function populateFinanceiroSelects() {
@@ -446,7 +628,7 @@ function populateFinanceiroSelects() {
 function renderFinanceiro() {
   const filterPac = u.$('fin-filter-pac')?.value;
   const filterStatus = u.$('fin-filter-status')?.value;
-  let lista = [...state.sessoes].sort((a, b) => b.data.localeCompare(a.data));
+  let lista = [...state.sessoes];
 
   if (filterPac) lista = lista.filter(s => s.pacienteId == filterPac);
   if (filterStatus) lista = lista.filter(s => s.status === filterStatus);
@@ -463,9 +645,9 @@ function renderFinanceiro() {
       <td><strong>${pac?.nome || '—'}</strong></td>
       <td style="white-space:nowrap;">${u.fmt(s.data, 'data')}</td>
       <td style="font-weight:600;">${u.fmt(s.valor, 'moeda')}</td>
-      <td><button class="badge ${s.status === 'Pago' ? 'badge-green' : 'badge-amber'}" onclick="toggleStatus(${s.id})" style="cursor:pointer;border:none;font-size:.75rem;padding:4px 12px;">${s.status}</button></td>
-      <td><label class="toggle-wrap" style="cursor:pointer;"><label class="toggle"><input type="checkbox" ${s.receitaSaude ? 'checked' : ''} onchange="toggleReceita(${s.id})"><span class="toggle-slider"></span></label><span style="font-size:.82rem;color:${s.receitaSaude ? 'var(--primary)' : 'var(--ink-soft)'};">${s.receitaSaude ? 'Emitido' : 'Pendente'}</span></label></td>
-      <td><button class="btn btn-danger btn-sm" onclick="excluirSessao(${s.id})">✕</button></td>
+      <td><button class="badge ${s.status === 'Pago' ? 'badge-green' : 'badge-amber'}" onclick="toggleStatus('${s.id}')" style="cursor:pointer;border:none;font-size:.75rem;padding:4px 12px;">${s.status}</button></td>
+      <td><label class="toggle-wrap" style="cursor:pointer;"><label class="toggle"><input type="checkbox" ${s.receitaSaude ? 'checked' : ''} onchange="toggleReceita('${s.id}')"><span class="toggle-slider"></span></label><span style="font-size:.82rem;color:${s.receitaSaude ? 'var(--primary)' : 'var(--ink-soft)'};">${s.receitaSaude ? 'Emitido' : 'Pendente'}</span></label></td>
+      <td><button class="btn btn-danger btn-sm" onclick="excluirSessao('${s.id}')">✕</button></td>
     </tr>`;
   }).join('');
 }
@@ -512,15 +694,26 @@ function copiarTabela() {
 }
 
 // ====== INIT ======
-(() => {
-  const activeEmail = sessionStorage.getItem('psicare_active_user');
-  if (activeEmail && USERS[activeEmail]) {
-    currentUser = USERS[activeEmail];
-    loadUserData();
-    updateUI();
-    u.$('login-screen').style.display = 'none';
-    u.$('app-wrapper').style.display = 'flex';
-    renderDashboard();
+(async () => {
+  // Verifica se existe uma sessão ativa no Supabase
+  const { data: { session } } = await _supabase.auth.getSession();
+
+  if (session) {
+    // Busca o perfil vinculado a esta conta
+    const { data: perfil } = await _supabase
+      .from('perfis')
+      .select('*')
+      .eq('id', session.user.id)
+      .single();
+
+    if (perfil) {
+      currentUser = { ...perfil, avatar: '👩‍⚕️' };
+      updateUI();
+      u.$('login-screen').style.display = 'none';
+      u.$('app-wrapper').style.display = 'flex';
+      await carregarTudo();
+      renderDashboard();
+    }
   }
 })();
 

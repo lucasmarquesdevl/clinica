@@ -450,11 +450,11 @@ async function carregarProntuarios(pid) {
     .from('prontuarios')
     .select('*')
     .eq('paciente_id', pid)
-    .order('data_sessao', { ascending: false });
+    .order('data', { ascending: false });
 
   if (!error) {
     state.prontuarios[pid] = (data || []).map(h => ({
-      data: h.data_sessao,
+      data: h.data,
       texto: h.texto,
       ts: h.id
     }));
@@ -464,12 +464,12 @@ async function carregarProntuarios(pid) {
 
 async function carregarAnexos(pid) {
   if (!pid) return;
-  const { data, error } = await _supabase.storage.from('DOCUMENTOS-PACIENTES').list(pid);
+  const { data, error } = await _supabase.storage.from('documentos-pacientes').list(pid);
   
   if (!error) {
     state.anexos[pid] = (data || []).map(f => ({
       nome: f.name,
-      url: _supabase.storage.from('DOCUMENTOS-PACIENTES').getPublicUrl(`${pid}/${f.name}`).data.publicUrl
+      url: _supabase.storage.from('documentos-pacientes').getPublicUrl(`${pid}/${f.name}`).data.publicUrl
     }));
     
     u.$('anexos-lista').innerHTML = state.anexos[pid]
@@ -485,7 +485,7 @@ async function fazerUploadAnexo(input) {
   const files = input.files;
   for (const file of files) {
     const path = `${pid}/${file.name}`;
-    const { error } = await _supabase.storage.from('DOCUMENTOS-PACIENTES').upload(path, file, {
+    const { error } = await _supabase.storage.from('documentos-pacientes').upload(path, file, {
       upsert: true
     });
     if (error) console.error("Erro no upload:", error);
@@ -523,7 +523,7 @@ async function salvarProntuario() {
   const { error } = await _supabase.from('prontuarios').insert([{
     paciente_id: pid,
     psicologa_id: currentUser.id,
-    data_sessao: data || new Date().toISOString().split('T')[0],
+    data: data || new Date().toISOString().split('T')[0],
     texto: txt
   }]);
 

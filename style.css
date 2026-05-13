@@ -321,7 +321,7 @@ h1,h2,h3 { font-family: 'DM Serif Display', serif; }
 ::-webkit-scrollbar-thumb { background: var(--sand); border-radius: 4px; }
 
 /* LOGIN SCREEN */
-#login-screen, #profile-setup-screen {
+#login-screen {
   position: fixed;
   inset: 0;
   background: var(--paper);
@@ -330,7 +330,7 @@ h1,h2,h3 { font-family: 'DM Serif Display', serif; }
   justify-content: center;
   z-index: 1000;
 }
-#login-screen.hidden, #profile-setup-screen.hidden { display: none; }
+#login-screen.hidden { display: none; }
 .login-card {
   background: var(--cream);
   border: 1.5px solid var(--border);

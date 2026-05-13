@@ -69,43 +69,17 @@ async function fazerLogin(e) {
   if (perfil) {
     currentUser = { ...perfil, avatar: '👩‍⚕️' };
     sessionStorage.setItem('psicare_active_user', email);
-    iniciarApp();
-  } else {
-    // Caso não exista perfil, mostramos a tela de configuração
-    u.$('setup-user-id').value = data.user.id;
+    updateUI();
     u.$('login-screen').style.display = 'none';
-    u.$('profile-setup-screen').style.display = 'flex';
+    u.$('app-wrapper').style.display = 'flex';
+    
+    await carregarTudo();
+    renderDashboard();
+    u.toast('Login realizado com sucesso!');
+  } else {
+    erroEl.textContent = "Perfil não configurado no banco.";
+    erroEl.style.display = 'block';
   }
-}
-
-async function salvarPerfilInicial(e) {
-  e.preventDefault();
-  const id = u.$('setup-user-id').value;
-  const nome = u.$('setup-nome').value;
-  const crp = u.$('setup-crp').value;
-
-  const { data, error } = await _supabase
-    .from('perfis')
-    .insert([{ id, nome, crp }])
-    .select()
-    .single();
-
-  if (error) {
-    alert("Erro ao criar perfil: " + error.message);
-    return;
-  }
-
-  currentUser = { ...data, avatar: '👩‍⚕️' };
-  u.$('profile-setup-screen').style.display = 'none';
-  iniciarApp();
-}
-
-async function iniciarApp() {
-  updateUI();
-  u.$('app-wrapper').style.display = 'flex';
-  await carregarTudo();
-  renderDashboard();
-  u.toast('Bem-vinda ao sistema!');
 }
 
 async function fazerLogout() {
@@ -369,7 +343,7 @@ async function carregarConsultas() {
       pacienteId: c.paciente_id,
       data: c.dados,
       hora: c.hora,
-      obs: c['observação']
+      obs: c['observacao']
     }));
     renderConsultas();
   }
@@ -388,7 +362,7 @@ async function salvarConsulta() {
     psicologa_id: currentUser.id,
     dados: data,
     hora: hora,
-    'observação': obs
+    'observacao': obs
   }]);
 
   if (error) {
@@ -470,7 +444,7 @@ function populateProntSelect() { populatePacienteSelects(); }
 async function carregarProntuarios(pid) {
   if (!pid) return;
   const { data, error } = await _supabase
-    .from('prontuários')
+    .from('prontuarios')
     .select('*')
     .eq('paciente_id', pid)
     .order('data_sessao', { ascending: false });
@@ -543,7 +517,7 @@ async function salvarProntuario() {
 
   if (!pid || !txt) { u.toast('Selecione o paciente e escreva a anotação.'); return; }
 
-  const { error } = await _supabase.from('prontuários').insert([{
+  const { error } = await _supabase.from('prontuarios').insert([{
     paciente_id: pid,
     psicologa_id: currentUser.id,
     data_sessao: data || new Date().toISOString().split('T')[0],
@@ -748,12 +722,11 @@ function copiarTabela() {
 
     if (perfil) {
       currentUser = { ...perfil, avatar: '👩‍⚕️' };
-      iniciarApp();
-    } else {
-      // Sessão existe mas perfil não? Mostra setup.
-      u.$('setup-user-id').value = session.user.id;
+      updateUI();
       u.$('login-screen').style.display = 'none';
-      u.$('profile-setup-screen').style.display = 'flex';
+      u.$('app-wrapper').style.display = 'flex';
+      await carregarTudo();
+      renderDashboard();
     }
   }
 })();

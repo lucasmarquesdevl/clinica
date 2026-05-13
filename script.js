@@ -77,8 +77,10 @@ async function fazerLogin(e) {
     renderDashboard();
     u.toast('Login realizado com sucesso!');
   } else {
-    erroEl.textContent = "Perfil não configurado no banco.";
+    const msgErro = perfilError ? `Erro: ${perfilError.message} (Código: ${perfilError.code})` : "Perfil não encontrado no banco.";
+    erroEl.textContent = msgErro;
     erroEl.style.display = 'block';
+    console.error("Detalhes do erro de perfil:", perfilError);
   }
 }
 

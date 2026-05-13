@@ -54,11 +54,17 @@ async function fazerLogin(e) {
   }
 
   // Busca os dados do perfil na tabela 'perfis'
+  console.log("Logado com sucesso! Buscando perfil para o ID:", data.user.id);
+  
   const { data: perfil, error: perfilError } = await _supabase
     .from('perfis')
     .select('*')
     .eq('id', data.user.id)
     .single();
+
+  if (perfilError) {
+    console.error("Erro ao buscar perfil no Supabase:", perfilError);
+  }
 
   if (perfil) {
     currentUser = { ...perfil, avatar: '👩‍⚕️' };

@@ -27,8 +27,14 @@ const u = {
     if (t === 'moeda') return 'R$ ' + parseFloat(v || 0).toFixed(2).replace('.', ',');
     if (t === 'data') return v ? v.split('-').reverse().join('/') : '';
   },
-  hide: (id, v = true) => u.$(`${id}${v ? '' : '-not'}`)?.style?.display !== 'none' && (u.$(`${id}`)?.style.display = v ? 'none' : 'flex'),
-  show: id => u.$(`${id}`)?.style && (u.$(`${id}`).style.display = 'flex'),
+  hide: (id, v = true) => {
+    const el = u.$(id);
+    if (el) el.style.display = v ? 'none' : 'flex';
+  },
+  show: id => {
+    const el = u.$(id);
+    if (el) el.style.display = 'flex';
+  },
 };
 
 // ====== LOGIN ======

@@ -43,6 +43,32 @@
     </div>
   </div>
 
+  <!-- PROFILE SETUP SCREEN (NEW) -->
+  <div id="profile-setup-screen" style="display:none;">
+    <div class="login-card">
+      <div class="login-logo">
+        <img src="logo.png" alt="Lugar de Ser">
+        <h1>Configurar Perfil</h1>
+        <p class="login-tagline">Complete seus dados profissionais</p>
+      </div>
+      <form id="setup-form" onsubmit="salvarPerfilInicial(event)">
+        <input type="hidden" id="setup-user-id">
+        <div class="form-group">
+          <label>Nome Completo</label>
+          <input type="text" id="setup-nome" placeholder="Ex: Dra. Ana Silva" required>
+        </div>
+        <div class="form-group">
+          <label>CRP</label>
+          <input type="text" id="setup-crp" placeholder="Ex: 05/12345" required>
+        </div>
+        <button type="submit" class="btn btn-primary"
+          style="width:100%;justify-content:center;padding:12px 20px;font-size:.95rem;">
+          Salvar e Começar
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- APP WRAPPER -->
   <div id="app-wrapper" style="display:none;width:100%;display:none;">
 

@@ -69,17 +69,43 @@ async function fazerLogin(e) {
   if (perfil) {
     currentUser = { ...perfil, avatar: '👩‍⚕️' };
     sessionStorage.setItem('psicare_active_user', email);
-    updateUI();
-    u.$('login-screen').style.display = 'none';
-    u.$('app-wrapper').style.display = 'flex';
-    
-    await carregarTudo();
-    renderDashboard();
-    u.toast('Login realizado com sucesso!');
+    iniciarApp();
   } else {
-    erroEl.textContent = "Perfil não configurado no banco.";
-    erroEl.style.display = 'block';
+    // Caso não exista perfil, mostramos a tela de configuração
+    u.$('setup-user-id').value = data.user.id;
+    u.$('login-screen').style.display = 'none';
+    u.$('profile-setup-screen').style.display = 'flex';
   }
+}
+
+async function salvarPerfilInicial(e) {
+  e.preventDefault();
+  const id = u.$('setup-user-id').value;
+  const nome = u.$('setup-nome').value;
+  const crp = u.$('setup-crp').value;
+
+  const { data, error } = await _supabase
+    .from('perfis')
+    .insert([{ id, nome, crp }])
+    .select()
+    .single();
+
+  if (error) {
+    alert("Erro ao criar perfil: " + error.message);
+    return;
+  }
+
+  currentUser = { ...data, avatar: '👩‍⚕️' };
+  u.$('profile-setup-screen').style.display = 'none';
+  iniciarApp();
+}
+
+async function iniciarApp() {
+  updateUI();
+  u.$('app-wrapper').style.display = 'flex';
+  await carregarTudo();
+  renderDashboard();
+  u.toast('Bem-vinda ao sistema!');
 }
 
 async function fazerLogout() {
@@ -722,11 +748,12 @@ function copiarTabela() {
 
     if (perfil) {
       currentUser = { ...perfil, avatar: '👩‍⚕️' };
-      updateUI();
+      iniciarApp();
+    } else {
+      // Sessão existe mas perfil não? Mostra setup.
+      u.$('setup-user-id').value = session.user.id;
       u.$('login-screen').style.display = 'none';
-      u.$('app-wrapper').style.display = 'flex';
-      await carregarTudo();
-      renderDashboard();
+      u.$('profile-setup-screen').style.display = 'flex';
     }
   }
 })();

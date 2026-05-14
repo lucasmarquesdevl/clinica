@@ -772,21 +772,24 @@ function copiarTabela() {
 
 // ====== INIT ======
 (async () => {
-  // --- ROTEADOR DE SEGURANÇA (Dev Sênior Solution) ---
-  // Captura tokens de recuperação ou convite vindos do e-mail
+  // --- ROTEADOR DE SEGURANÇA (Versão Ultra-Robusta) ---
   const hash = window.location.hash;
   if (hash && (hash.includes('type=recovery') || hash.includes('type=invite') || hash.includes('type=signup'))) {
-    console.log("Detectado link de autenticação. Redirecionando para a página correta...");
+    console.log("Detectado link de autenticação. Redirecionando...");
     
-    // Se for recuperação de senha, manda para redefinicao.html
+    // Captura o caminho da pasta atual para evitar erro 404
+    let currentPath = window.location.pathname;
+    let folderPath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+    
+    // Se for recuperação de senha
     if (hash.includes('type=recovery')) {
-      window.location.href = 'redefinicao.html' + hash;
+      window.location.href = folderPath + 'redefinicao.html' + hash;
       return;
     }
     
-    // Se for convite (signup/invite), manda para finalizar-cadastro.html
+    // Se for convite (signup/invite)
     if (hash.includes('type=invite') || hash.includes('type=signup')) {
-      window.location.href = 'finalizar-cadastro.html' + hash;
+      window.location.href = folderPath + 'finalizar-cadastro.html' + hash;
       return;
     }
   }

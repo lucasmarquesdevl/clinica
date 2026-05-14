@@ -525,10 +525,18 @@ async function carregarAnexos(pid) {
     return;
   }
 
-  state.anexos[pid] = (data || []).map(f => ({
-    nome: f.name,
-    url: _supabase.storage.from('documentos-pacientes').getPublicUrl(`${pid}/${f.name}`).data.publicUrl
-  }));
+  // Gerar links assinados seguros para cada arquivo (expiram em 1 hora)
+  const anexosPromessas = (data || []).map(async f => {
+    const { data: urlData } = await _supabase.storage
+      .from('documentos-pacientes')
+      .createSignedUrl(`${pid}/${f.name}`, 3600);
+    return {
+      nome: f.name,
+      url: urlData ? urlData.signedUrl : '#'
+    };
+  });
+
+  state.anexos[pid] = await Promise.all(anexosPromessas);
   
   const listaEl = u.$('anexos-lista');
   if (listaEl) {

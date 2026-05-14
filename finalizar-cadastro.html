@@ -132,18 +132,28 @@
         <div class="form-section">
           <div class="form-group">
             <label>Nome Completo</label>
-            <input type="text" id="setup-nome" placeholder="Ex: Dra. Natália Trindade" required>
+            <input type="text" id="setup-nome" placeholder="Seu nome completo" required>
           </div>
-          <div class="form-group" style="margin-bottom: 0;">
+          <div class="form-group">
             <label>CRP</label>
             <input type="text" id="setup-crp" placeholder="00/00000" required maxlength="10">
-            <small style="color: var(--ink-soft); font-size: 0.75rem; margin-top: 4px; display: block;">Formato: 00/00000</small>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Definir Senha</label>
+              <input type="password" id="setup-senha" placeholder="Mínimo 6 caracteres" required minlength="6">
+            </div>
+            <div class="form-group">
+              <label>Confirmar Senha</label>
+              <input type="password" id="setup-confirmar" placeholder="Repita a senha" required minlength="6">
+            </div>
           </div>
         </div>
 
         <button type="submit" class="btn btn-primary btn-full">
           Concluir e Acessar ➔
         </button>
+        <p id="setup-erro" style="color:#c0392b; font-size:0.82rem; text-align:center; margin-top:12px; display:none;"></p>
       </form>
     </div>
 
@@ -151,8 +161,8 @@
     <div id="view-success" class="success-view">
       <div class="success-icon">✓</div>
       <h1>Cadastro Finalizado!</h1>
-      <p style="color: var(--ink-soft); margin-bottom: 24px;">Seu perfil profissional foi configurado com sucesso. Você já pode acessar todas as funcionalidades.</p>
-      <a href="index.html" class="btn btn-primary btn-full">Entrar no Sistema</a>
+      <p style="color: var(--ink-soft); margin-bottom: 24px;">Seu perfil profissional e senha foram configurados com sucesso. Agora você já pode acessar a plataforma.</p>
+      <a href="index.html" class="btn btn-primary btn-full">Ir para o Login</a>
     </div>
   </div>
 
@@ -169,13 +179,10 @@
     });
 
     async function init() {
-      // Verifica se o usuário chegou via link de convite (estará logado)
       const { data: { session } } = await _supabase.auth.getSession();
-      
       if (!session) {
-        alert("Link inválido ou expirado. Peça um novo convite ao administrador.");
+        alert("Link inválido ou expirado.");
         window.location.href = 'index.html';
-        return;
       }
     }
 
@@ -183,25 +190,45 @@
       e.preventDefault();
       const nome = document.getElementById('setup-nome').value.trim();
       const crp = document.getElementById('setup-crp').value.trim();
+      const senha = document.getElementById('setup-senha').value;
+      const confirma = document.getElementById('setup-confirmar').value;
+      const erroEl = document.getElementById('setup-erro');
       const loader = document.getElementById('loading');
 
+      if (senha !== confirma) {
+        erroEl.textContent = "As senhas não coincidem.";
+        erroEl.style.display = 'block';
+        return;
+      }
+
       loader.style.display = 'flex';
+      erroEl.style.display = 'none';
 
-      const { data: { user } } = await _supabase.auth.getUser();
+      try {
+        // 1. Atualiza a senha no Auth
+        const { error: authError } = await _supabase.auth.updateUser({ password: senha });
+        if (authError) throw authError;
 
-      // Atualiza o perfil que foi criado automaticamente pelo Trigger
-      const { error } = await _supabase
-        .from('perfis')
-        .update({ nome, crp })
-        .eq('id', user.id);
+        // 2. Atualiza os dados no Perfil
+        const { data: { user } } = await _supabase.auth.getUser();
+        const { error: profileError } = await _supabase
+          .from('perfis')
+          .update({ nome, crp })
+          .eq('id', user.id);
+        
+        if (profileError) throw profileError;
 
-      loader.style.display = 'none';
-
-      if (error) {
-        alert("Erro ao salvar dados: " + error.message);
-      } else {
+        // 3. Logout para forçar login manual
+        await _supabase.auth.signOut();
+        
+        loader.style.display = 'none';
         document.getElementById('view-setup').style.display = 'none';
         document.getElementById('view-success').style.display = 'block';
+
+      } catch (err) {
+        loader.style.display = 'none';
+        erroEl.textContent = "Erro: " + err.message;
+        erroEl.style.display = 'block';
       }
     });
 

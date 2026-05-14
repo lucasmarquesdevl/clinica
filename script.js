@@ -120,19 +120,30 @@ async function enviarEmailRecuperacao(e) {
   const email = u.$('recovery-email').value;
   const msgEl = u.$('recovery-msg');
   
-  // Define a URL de redirecionamento para o arquivo redefinicao.html que criamos
-  const redirectUrl = window.location.origin + window.location.pathname.replace('index.html', '') + 'redefinicao.html';
+  // Captura a URL base atual (ex: https://meusite.vercel.app/ ou http://127.0.0.1:5500/)
+  // Remove o index.html se ele estiver presente na URL
+  let baseUrl = window.location.href.split('?')[0].split('#')[0];
+  if (baseUrl.endsWith('index.html')) {
+    baseUrl = baseUrl.replace('index.html', '');
+  }
+  if (!baseUrl.endsWith('/')) {
+    baseUrl += '/';
+  }
   
+  const redirectUrl = baseUrl + 'redefinicao.html';
+  
+  console.log("Solicitando redefinição. O link levará para:", redirectUrl);
+
   const { error } = await _supabase.auth.resetPasswordForEmail(email, {
     redirectTo: redirectUrl,
   });
 
   msgEl.style.display = 'block';
   if (error) {
-    msgEl.textContent = "Erro ao enviar e-mail: " + error.message;
+    msgEl.textContent = "Erro: " + error.message;
     msgEl.style.color = "#c0392b";
   } else {
-    msgEl.textContent = "Link enviado! Verifique sua caixa de entrada.";
+    msgEl.textContent = "Link enviado! Verifique seu e-mail (inclusive o SPAM).";
     msgEl.style.color = "var(--sage-dark)";
     u.$('recovery-email').value = '';
   }

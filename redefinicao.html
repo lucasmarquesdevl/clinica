@@ -269,6 +269,9 @@
         errorEl.textContent = "Erro: " + error.message;
         errorEl.style.display = 'block';
       } else {
+        // Importante: Deslogar após trocar a senha para forçar o login manual na index
+        await _supabase.auth.signOut();
+        
         // Sucesso!
         showStep('success');
         startRedirectTimer();

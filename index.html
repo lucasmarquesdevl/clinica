@@ -35,8 +35,27 @@
           style="width:100%;justify-content:center;padding:12px 20px;font-size:.95rem;">
           Entrar
         </button>
+        <div style="text-align:center;margin-top:16px;">
+          <a href="javascript:void(0)" onclick="mostrarRecuperarSenha()" style="font-size:.82rem;color:var(--primary);text-decoration:none;font-weight:500;">Esqueci minha senha</a>
+        </div>
         <p id="login-erro" style="color:#c0392b;font-size:.82rem;text-align:center;margin-top:12px;display:none;"></p>
       </form>
+
+      <!-- RECUPERAR SENHA FORM (Inicialmente oculto) -->
+      <form id="recovery-form" style="display:none;" onsubmit="enviarEmailRecuperacao(event)">
+        <div class="form-group">
+          <label>E-mail de Recuperação</label>
+          <input type="email" id="recovery-email" placeholder="Seu e-mail cadastrado" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px 20px;font-size:.95rem;">
+          Enviar Link de Redefinição
+        </button>
+        <div style="text-align:center;margin-top:16px;">
+          <a href="javascript:void(0)" onclick="mostrarLogin()" style="font-size:.82rem;color:var(--ink-soft);text-decoration:none;">Voltar para o Login</a>
+        </div>
+        <p id="recovery-msg" style="font-size:.82rem;text-align:center;margin-top:12px;display:none;"></p>
+      </form>
+
       <div class="login-footer">
         Sistema exclusivo para profissionais do espaço.
       </div>

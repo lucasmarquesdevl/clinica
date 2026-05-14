@@ -92,7 +92,43 @@ async function fazerLogout() {
   u.$('login-erro').style.display = 'none';
   u.$('app-wrapper').style.display = 'none';
   u.$('login-screen').style.display = 'flex';
+  mostrarLogin(); // Reseta para a tela de login
   u.toast('Sessão encerrada.');
+}
+
+// Funções de Recuperação de Senha
+function mostrarRecuperarSenha() {
+  u.$('login-form').style.display = 'none';
+  u.$('recovery-form').style.display = 'block';
+  u.$('recovery-msg').style.display = 'none';
+}
+
+function mostrarLogin() {
+  u.$('login-form').style.display = 'block';
+  u.$('recovery-form').style.display = 'none';
+}
+
+async function enviarEmailRecuperacao(e) {
+  e.preventDefault();
+  const email = u.$('recovery-email').value;
+  const msgEl = u.$('recovery-msg');
+  
+  // Define a URL de redirecionamento para o arquivo redefinicao.html que criamos
+  const redirectUrl = window.location.origin + window.location.pathname.replace('index.html', '') + 'redefinicao.html';
+  
+  const { error } = await _supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: redirectUrl,
+  });
+
+  msgEl.style.display = 'block';
+  if (error) {
+    msgEl.textContent = "Erro ao enviar e-mail: " + error.message;
+    msgEl.style.color = "#c0392b";
+  } else {
+    msgEl.textContent = "Link enviado! Verifique sua caixa de entrada.";
+    msgEl.style.color = "var(--sage-dark)";
+    u.$('recovery-email').value = '';
+  }
 }
 
 function updateUI() {

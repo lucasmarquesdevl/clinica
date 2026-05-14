@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redefinir Senha — Lugar de Ser</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--paper);
+      padding: 20px;
+    }
+
+    .recovery-card {
+      background: var(--cream);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 48px 40px;
+      width: 440px;
+      max-width: 100%;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Decorative element */
+    .recovery-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, var(--sage), var(--primary-light));
+    }
+
+    .success-icon {
+      width: 72px;
+      height: 72px;
+      background: var(--sage-light);
+      color: var(--sage-dark);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 32px;
+      animation: scaleUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes scaleUp {
+      from { transform: scale(0); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .recovery-card h1 {
+      font-size: 1.75rem;
+      margin-bottom: 12px;
+      color: var(--ink);
+    }
+
+    .recovery-card p {
+      color: var(--ink-soft);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 32px;
+    }
+
+    .btn-full {
+      width: 100%;
+      justify-content: center;
+      padding: 14px 20px;
+      font-size: 1rem;
+    }
+
+    .support-link {
+      margin-top: 24px;
+      font-size: 0.85rem;
+      color: var(--ink-soft);
+    }
+
+    .support-link a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+
+    .support-link a:hover {
+      opacity: 0.8;
+    }
+
+    .redirect-notice {
+      margin-top: 20px;
+      font-size: 0.8rem;
+      color: var(--sage-dark);
+      background: var(--sage-light);
+      padding: 8px 16px;
+      border-radius: 99px;
+      display: inline-block;
+    }
+
+    /* Password Input States */
+    #reset-form {
+      text-align: left;
+    }
+
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(250, 245, 239, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      backdrop-filter: blur(2px);
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--sage-light);
+      border-top-color: var(--sage);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="recovery-card">
+    <div id="loading" class="loading-overlay">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- STEP 1: SET NEW PASSWORD -->
+    <div id="step-set-password">
+      <div class="login-logo" style="margin-bottom: 20px;">
+        <img src="logo.png" alt="Lugar de Ser" style="width: 64px; height: 64px; margin-bottom: 10px;">
+        <h1>Nova Senha</h1>
+        <p class="login-tagline">Crie uma senha segura para seu acesso</p>
+      </div>
+
+      <form id="reset-form">
+        <div class="form-group">
+          <label>Nova Senha</label>
+          <input type="password" id="new-password" placeholder="Mínimo 6 caracteres" required minlength="6">
+        </div>
+        <div class="form-group">
+          <label>Confirmar Senha</label>
+          <input type="password" id="confirm-password" placeholder="Repita a senha" required minlength="6">
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">
+          Atualizar Senha 🛡️
+        </button>
+        <p id="error-msg" style="color:#c0392b; font-size:0.82rem; text-align:center; margin-top:12px; display:none;"></p>
+      </form>
+    </div>
+
+    <!-- STEP 2: SUCCESS (The screen requested) -->
+    <div id="step-success" style="display: none;">
+      <div class="success-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      
+      <h1>Tudo pronto! 🛡️</h1>
+      <p>Sua senha foi atualizada com segurança. Agora você já pode acessar sua conta com a nova senha cadastrada.</p>
+      
+      <a href="index.html" class="btn btn-primary btn-full">
+        Ir para o Login
+      </a>
+
+      <div class="redirect-notice" id="redirect-timer">
+        Você será redirecionada em 5 segundos...
+      </div>
+
+      <div class="support-link">
+        Precisa de ajuda? <a href="#">Falar com o Suporte</a>
+      </div>
+    </div>
+
+    <!-- STEP 3: EXPIRED / ERROR -->
+    <div id="step-error" style="display: none;">
+      <div class="success-icon" style="background: #fde8e8; color: #c0392b;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </div>
+      <h1>Link Expirado</h1>
+      <p>Este link de redefinição não é mais válido ou já foi utilizado. Por motivos de segurança, solicite um novo link.</p>
+      <a href="index.html" class="btn btn-ghost btn-full">
+        Voltar ao Início
+      </a>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://ezutgtfynlvbgbqmpqyb.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6dXRndGZ5bmx2YmdicW1wcXliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NDMyODcsImV4cCI6MjA5NDIxOTI4N30.' + 't1VcyLhhfe8n_l_YDUgkx6u-YGm_PpDG7lALE52loaE';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const steps = {
+      form: document.getElementById('step-set-password'),
+      success: document.getElementById('step-success'),
+      error: document.getElementById('step-error'),
+      loading: document.getElementById('loading')
+    };
+
+    async function init() {
+      // O Supabase lida com o token na URL automaticamente ao carregar o cliente
+      // Mas precisamos verificar se há uma sessão ativa (vinda do link de recovery)
+      const { data: { session }, error } = await _supabase.auth.getSession();
+      
+      if (error || !session) {
+        // Se não houver sessão, o link pode estar quebrado ou expirado
+        showStep('error');
+        return;
+      }
+      
+      // Se houver sessão, mostramos o formulário
+      showStep('form');
+    }
+
+    function showStep(name) {
+      Object.keys(steps).forEach(k => {
+        if (k !== 'loading') steps[k].style.display = k === name ? 'block' : 'none';
+      });
+    }
+
+    document.getElementById('reset-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pass = document.getElementById('new-password').value;
+      const confirm = document.getElementById('confirm-password').value;
+      const errorEl = document.getElementById('error-msg');
+
+      if (pass !== confirm) {
+        errorEl.textContent = "As senhas não coincidem.";
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      steps.loading.style.display = 'flex';
+      errorEl.style.display = 'none';
+
+      const { error } = await _supabase.auth.updateUser({ password: pass });
+
+      steps.loading.style.display = 'none';
+
+      if (error) {
+        errorEl.textContent = "Erro: " + error.message;
+        errorEl.style.display = 'block';
+      } else {
+        // Sucesso!
+        showStep('success');
+        startRedirectTimer();
+      }
+    });
+
+    function startRedirectTimer() {
+      let seconds = 5;
+      const timerEl = document.getElementById('redirect-timer');
+      const interval = setInterval(() => {
+        seconds--;
+        if (seconds <= 0) {
+          clearInterval(interval);
+          window.location.href = 'index.html';
+        } else {
+          timerEl.textContent = `Você será redirecionada em ${seconds} segundos...`;
+        }
+      }, 1000);
+    }
+
+    init();
+  </script>
+</body>
+
+</html>

@@ -772,7 +772,26 @@ function copiarTabela() {
 
 // ====== INIT ======
 (async () => {
-  // Verifica se existe uma sessão ativa no Supabase
+  // --- ROTEADOR DE SEGURANÇA (Dev Sênior Solution) ---
+  // Captura tokens de recuperação ou convite vindos do e-mail
+  const hash = window.location.hash;
+  if (hash && (hash.includes('type=recovery') || hash.includes('type=invite') || hash.includes('type=signup'))) {
+    console.log("Detectado link de autenticação. Redirecionando para a página correta...");
+    
+    // Se for recuperação de senha, manda para redefinicao.html
+    if (hash.includes('type=recovery')) {
+      window.location.href = 'redefinicao.html' + hash;
+      return;
+    }
+    
+    // Se for convite (signup/invite), manda para finalizar-cadastro.html
+    if (hash.includes('type=invite') || hash.includes('type=signup')) {
+      window.location.href = 'finalizar-cadastro.html' + hash;
+      return;
+    }
+  }
+
+  // Verifica se existe uma sessão ativa no Supabase (Login normal)
   const { data: { session } } = await _supabase.auth.getSession();
 
   if (session) {

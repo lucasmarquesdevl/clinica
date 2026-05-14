@@ -60,7 +60,7 @@ async function fazerLogin(e) {
     .from('perfis')
     .select('*')
     .eq('id', data.user.id)
-    .single();
+    .maybeSingle(); // Usar maybeSingle evita o erro PGRST116 se não encontrar o registro
 
   if (perfilError) {
     console.error("Erro ao buscar perfil no Supabase:", perfilError);
@@ -77,10 +77,17 @@ async function fazerLogin(e) {
     renderDashboard();
     u.toast('Login realizado com sucesso!');
   } else {
-    const msgErro = perfilError ? `Erro: ${perfilError.message} (Código: ${perfilError.code})` : "Perfil não encontrado no banco.";
+    // Se o login no Auth deu certo mas não tem Perfil, avisamos o usuário
+    const msgErro = perfilError 
+      ? `Erro no banco: ${perfilError.message}` 
+      : "Usuário autenticado, mas perfil não encontrado na tabela 'perfis'. Verifique se o registro do profissional foi criado.";
+    
     erroEl.textContent = msgErro;
     erroEl.style.display = 'block';
-    console.error("Detalhes do erro de perfil:", perfilError);
+    console.error("Detalhes do erro de perfil:", perfilError || "Registro faltando na tabela 'perfis'");
+    
+    // Opcional: Deslogar para não ficar em estado inconsistente
+    await _supabase.auth.signOut();
   }
 }
 

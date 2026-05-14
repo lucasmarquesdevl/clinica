@@ -85,7 +85,7 @@
             <rect x="3" y="14" width="7" height="7" rx="1.5" />
             <rect x="14" y="14" width="7" height="7" rx="1.5" />
           </svg>
-          Dashboard
+          Início
         </div>
         <div class="nav-item" data-page="pacientes">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24"
@@ -130,10 +130,12 @@
       </div>
 
       <div class="sidebar-footer">
-        <div class="avatar" id="user-avatar">N</div>
-        <div>
-          <div style="font-weight:600;font-size:.83rem;" id="user-nome">Dra. Natália Trindade</div>
-          <div style="font-size:.73rem;color:var(--primary);" id="user-crp">Psicóloga CRP 05/75997</div>
+        <div style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;" onclick="abrirModalPerfil()" title="Editar meu perfil">
+          <div class="avatar" id="user-avatar">N</div>
+          <div style="overflow:hidden;">
+            <div style="font-weight:600;font-size:.83rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="user-nome">Dra. Natália Trindade</div>
+            <div style="font-size:.73rem;color:var(--primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="user-crp">Psicóloga CRP 05/75997</div>
+          </div>
         </div>
         <button class="btn-logout" onclick="fazerLogout()" title="Sair">Sair</button>
       </div>
@@ -559,6 +561,27 @@
         <div style="display:flex;gap:10px;margin-top:8px;">
           <button class="btn btn-primary" style="flex:1;" onclick="salvarSessao()">Registrar</button>
           <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL PERFIL -->
+    <div id="modal-perfil"
+      style="display:none;position:fixed;inset:0;background:rgba(44,62,56,.35);backdrop-filter:blur(3px);z-index:100;align-items:center;justify-content:center;">
+      <div
+        style="background:var(--card);border-radius:16px;padding:28px;width:400px;max-width:95vw;box-shadow:var(--shadow-lg);">
+        <h3 style="font-size:1.15rem;margin-bottom:20px;">Meus Dados Profissionais</h3>
+        <div class="form-group">
+          <label>Nome Completo</label>
+          <input type="text" id="perfil-nome" placeholder="Seu nome">
+        </div>
+        <div class="form-group">
+          <label>CRP</label>
+          <input type="text" id="perfil-crp" placeholder="Ex: 05/12345">
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button class="btn btn-primary" style="flex:1;" onclick="salvarPerfil()">Salvar Alterações</button>
+          <button class="btn btn-ghost" onclick="fecharModalPerfil()">Cancelar</button>
         </div>
       </div>
     </div>

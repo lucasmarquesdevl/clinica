@@ -153,8 +153,8 @@ function updateUI() {
   if (!currentUser) return;
   u.$('user-nome').textContent = currentUser.nome;
   u.$('user-crp').textContent = `Psicóloga CRP ${currentUser.crp}`;
-  u.$('user-avatar').textContent = currentUser.avatar || '👩‍⚕️';
-  u.$$('.page-header h2')[0].textContent = `Bom dia, Dra. ${currentUser.nome.split(' ')[1] || currentUser.nome} ✿`;
+  u.$('user-avatar').textContent = (currentUser.nome || 'P')[0].toUpperCase();
+  u.$$('.page-header h2')[0].textContent = `Bom dia, Dra. ${currentUser.nome.split(' ')[0] || 'Colega'} ✿`;
 }
 
 function loadUserData() {
@@ -520,13 +520,19 @@ async function carregarAnexos(pid) {
   if (!pid) return;
   const { data, error } = await _supabase.storage.from('documentos-pacientes').list(pid);
   
-  if (!error) {
-    state.anexos[pid] = (data || []).map(f => ({
-      nome: f.name,
-      url: _supabase.storage.from('documentos-pacientes').getPublicUrl(`${pid}/${f.name}`).data.publicUrl
-    }));
-    
-    u.$('anexos-lista').innerHTML = state.anexos[pid]
+  if (error) {
+    console.error("Erro ao carregar anexos:", error);
+    return;
+  }
+
+  state.anexos[pid] = (data || []).map(f => ({
+    nome: f.name,
+    url: _supabase.storage.from('documentos-pacientes').getPublicUrl(`${pid}/${f.name}`).data.publicUrl
+  }));
+  
+  const listaEl = u.$('anexos-lista');
+  if (listaEl) {
+    listaEl.innerHTML = state.anexos[pid]
       .map(a => `<a href="${a.url}" target="_blank" class="file-link" style="display:inline-flex;align-items:center;gap:6px;background:var(--blush);border-radius:6px;padding:4px 10px;font-size:.78rem;margin:3px;text-decoration:none;color:inherit;">📎 ${a.nome}</a>`)
       .join('');
   }
@@ -542,7 +548,12 @@ async function fazerUploadAnexo(input) {
     const { error } = await _supabase.storage.from('documentos-pacientes').upload(path, file, {
       upsert: true
     });
-    if (error) console.error("Erro no upload:", error);
+    if (error) {
+      console.error("Erro no upload:", error);
+      u.toast('Erro no upload: ' + error.message);
+      input.value = '';
+      return;
+    }
   }
 
   await carregarAnexos(pid);
@@ -768,6 +779,43 @@ function copiarTabela() {
     text += cells.join('\t') + '\n';
   });
   navigator.clipboard.writeText(text).then(() => u.toast('Tabela copiada!'));
+}
+// ====== PERFIL ======
+function abrirModalPerfil() {
+  if (!currentUser) return;
+  u.$('perfil-nome').value = currentUser.nome;
+  u.$('perfil-crp').value = currentUser.crp;
+  u.$('modal-perfil').style.display = 'flex';
+}
+
+function fecharModalPerfil() {
+  u.$('modal-perfil').style.display = 'none';
+}
+
+async function salvarPerfil() {
+  const nome = u.$('perfil-nome').value.trim();
+  const crp = u.$('perfil-crp').value.trim();
+
+  if (!nome || !crp) {
+    u.toast('Preencha seu nome e CRP.');
+    return;
+  }
+
+  const { error } = await _supabase
+    .from('perfis')
+    .update({ nome, crp })
+    .eq('id', currentUser.id);
+
+  if (error) {
+    console.error("Erro ao atualizar perfil:", error);
+    u.toast('Erro ao atualizar: ' + error.message);
+  } else {
+    currentUser.nome = nome;
+    currentUser.crp = crp;
+    updateUI();
+    fecharModalPerfil();
+    u.toast('Perfil atualizado com sucesso!');
+  }
 }
 
 // ====== INIT ======

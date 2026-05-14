@@ -62,4 +62,4 @@ Para o correto funcionamento do sistema, é necessário configurar as seguintes 
 O sistema utiliza uma paleta de cores **Boho Chic**, focada em proporcionar um ambiente calmo e profissional. As variáveis de estilo estão centralizadas no arquivo `style.css` para facilitar a manutenção da identidade visual.
 
 ---
-*Desenvolvido com foco em ética profissional e eficiência clínica.*
+*Desenvolvido com foco em ética profissional e eficiência clínica por **Lucas Trindade**.*

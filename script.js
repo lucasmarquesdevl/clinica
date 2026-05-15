@@ -525,13 +525,16 @@ async function carregarAnexos(pid) {
     return;
   }
 
-  // Gerar links assinados seguros para cada arquivo (expiram em 1 hora)
-  const anexosPromessas = (data || []).map(async f => {
+  // Filtra placeholders e gera links assinados
+  const arquivosValidos = (data || []).filter(f => f.name !== '.emptyFolderPlaceholder');
+  
+  const anexosPromessas = arquivosValidos.map(async f => {
     const { data: urlData } = await _supabase.storage
       .from('documentos-pacientes')
       .createSignedUrl(`${pid}/${f.name}`, 3600);
     return {
-      nome: f.name,
+      nome: f.name.includes('__') ? f.name.split('__')[1] : f.name, // Remove o timestamp para exibição
+      nomeReal: f.name,
       url: urlData ? urlData.signedUrl : '#'
     };
   });
@@ -541,8 +544,25 @@ async function carregarAnexos(pid) {
   const listaEl = u.$('anexos-lista');
   if (listaEl) {
     listaEl.innerHTML = state.anexos[pid]
-      .map(a => `<a href="${a.url}" target="_blank" class="file-link" style="display:inline-flex;align-items:center;gap:6px;background:var(--blush);border-radius:6px;padding:4px 10px;font-size:.78rem;margin:3px;text-decoration:none;color:inherit;">📎 ${a.nome}</a>`)
+      .map(a => `<div style="display:inline-flex;align-items:center;gap:6px;background:var(--blush);border-radius:6px;padding:4px 10px;font-size:.78rem;margin:3px;">
+        <a href="${a.url}" target="_blank" style="text-decoration:none;color:inherit;">📎 ${a.nome}</a>
+        <button onclick="excluirAnexo('${a.nomeReal}')" style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:.9rem;padding:0 2px;display:flex;align-items:center;">✕</button>
+      </div>`)
       .join('');
+  }
+}
+
+async function excluirAnexo(nomeArquivo) {
+  const pid = u.$('pront-paciente').value;
+  if (!pid || !confirm('Deseja excluir este documento?')) return;
+
+  const { error } = await _supabase.storage.from('documentos-pacientes').remove([`${pid}/${nomeArquivo}`]);
+  
+  if (error) {
+    u.toast('Erro ao excluir: ' + error.message);
+  } else {
+    u.toast('Documento excluído.');
+    await carregarAnexos(pid);
   }
 }
 
@@ -551,21 +571,27 @@ async function fazerUploadAnexo(input) {
   if (!pid) { u.toast('Selecione o paciente primeiro.'); return; }
 
   const files = input.files;
+  if (files.length === 0) return;
+
+  u.toast(`Iniciando upload de ${files.length} arquivo(s)...`);
+
   for (const file of files) {
-    const path = `${pid}/${file.name}`;
-    const { error } = await _supabase.storage.from('documentos-pacientes').upload(path, file, {
-      upsert: true
-    });
+    // Adiciona um timestamp para evitar sobrescrita de arquivos com mesmo nome
+    const timestamp = Date.now();
+    const safeName = file.name.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
+    const path = `${pid}/${timestamp}__${safeName}`;
+    
+    const { error } = await _supabase.storage.from('documentos-pacientes').upload(path, file);
+    
     if (error) {
       console.error("Erro no upload:", error);
       u.toast('Erro no upload: ' + error.message);
-      input.value = '';
-      return;
+      continue; // Tenta o próximo arquivo se um falhar
     }
   }
 
   await carregarAnexos(pid);
-  u.toast('Arquivo(s) anexado(s)!');
+  u.toast('Arquivo(s) salvos com sucesso!');
   input.value = '';
 }
 

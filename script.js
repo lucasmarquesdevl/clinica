@@ -491,7 +491,7 @@ function renderConsultas() {
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
         <span class="badge ${past ? 'badge-gray' : 'badge-green'}">${past ? 'Realizada' : 'Agendada'}</span>
-        <button class="btn btn-danger btn-sm" onclick="excluirConsulta(${c.id})">✕</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirConsulta('${c.id}')">✕</button>
       </div>
     </div>`;
   }).join('');
@@ -654,7 +654,8 @@ async function salvarProntuario() {
 }
 
 function editarAnotacao(pid, id) {
-  const anotacao = state.prontuarios[pid].find(h => h.ts === id);
+  // Usamos == para comparar caso o ID venha como string do HTML e seja número no estado
+  const anotacao = state.prontuarios[pid].find(h => h.ts == id);
   if (!anotacao) return;
 
   u.$('pront-texto').value = anotacao.texto;
@@ -672,7 +673,7 @@ function renderHistoricoProntuario(pid) {
   el.innerHTML = hist.length ? hist.map(h => `<div style="border-bottom:1px solid var(--border);padding:14px 0;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
       <div style="font-size:.78rem;font-weight:600;color:var(--primary);">📅 ${u.fmt(h.data, 'data')}</div>
-      <button class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.7rem;" onclick="editarAnotacao('${pid}', ${h.ts})">Editar</button>
+      <button class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.7rem;" onclick="editarAnotacao('${pid}', '${h.ts}')">Editar</button>
     </div>
     <p style="font-size:.88rem;line-height:1.6;white-space:pre-wrap;">${h.texto}</p></div>`).join('')
     : '<p style="color:var(--ink-soft);font-size:.85rem;">Nenhuma anotação registrada.</p>';
@@ -921,12 +922,14 @@ async function salvarPerfil() {
     if (perfil) {
       currentUser = { ...perfil, avatar: '👩‍⚕️' };
       updateUI();
-      u.$('login-screen').style.display = 'none';
-      u.$('app-wrapper').style.display = 'flex';
+      
       await carregarTudo();
       
       const lastPage = sessionStorage.getItem('psicare_last_page') || 'dashboard';
       navigate(lastPage);
+
+      u.$('login-screen').style.display = 'none';
+      u.$('app-wrapper').style.display = 'flex';
     }
   } else {
     u.$('login-screen').style.display = 'flex';

@@ -1,9 +1,12 @@
+// ====== CONFIGURAÇÃO ======
 const SUPABASE_URL = 'https://ezutgtfynlvbgbqmpqyb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6dXRndGZ5bmx2YmdicW1wcXliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NDMyODcsImV4cCI6MjA5NDIxOTI4N30.' + 't1VcyLhhfe8n_l_YDUgkx6u-YGm_PpDG7lALE52loaE';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// O USERS agora é opcional, pois usaremos o Supabase Auth para gerenciar os IDs e senhas.
 const USERS = {};
 
+// ====== STATE & UTILS ======
 let currentUser = null;
 let state = { pacientes: [], consultas: [], sessoes: [], prontuarios: {}, anexos: {} };
 
@@ -34,12 +37,18 @@ const u = {
   },
 };
 
+function maskCPF(el) {
+  el.value = u.fmt(el.value, 'cpf');
+}
+
+// ====== LOGIN ======
 async function fazerLogin(e) {
   e?.preventDefault?.();
   const email = u.$('login-email').value;
   const senha = u.$('login-senha').value;
   const erroEl = u.$('login-erro');
 
+  // Login real no Supabase Auth
   const { data, error } = await _supabase.auth.signInWithPassword({ email, password: senha });
 
   if (error) {
@@ -48,13 +57,14 @@ async function fazerLogin(e) {
     return;
   }
 
-  
+  // Busca os dados do perfil na tabela 'perfis'
+  console.log("Logado com sucesso! Buscando perfil para o ID:", data.user.id);
   
   const { data: perfil, error: perfilError } = await _supabase
     .from('perfis')
     .select('*')
     .eq('id', data.user.id)
-    .maybeSingle();
+    .maybeSingle(); // Usar maybeSingle evita o erro PGRST116 se não encontrar o registro
 
   if (perfilError) {
     console.error("Erro ao buscar perfil no Supabase:", perfilError);
@@ -70,7 +80,8 @@ async function fazerLogin(e) {
     await carregarTudo();
     renderDashboard();
     u.toast('Login realizado com sucesso!');
-  } else {    
+  } else {
+    // Se o login no Auth deu certo mas não tem Perfil, avisamos o usuário
     const msgErro = perfilError 
       ? `Erro no banco: ${perfilError.message}` 
       : "Usuário autenticado, mas perfil não encontrado na tabela 'perfis'. Verifique se o registro do profissional foi criado.";
@@ -78,6 +89,8 @@ async function fazerLogin(e) {
     erroEl.textContent = msgErro;
     erroEl.style.display = 'block';
     console.error("Detalhes do erro de perfil:", perfilError || "Registro faltando na tabela 'perfis'");
+    
+    // Opcional: Deslogar para não ficar em estado inconsistente
     await _supabase.auth.signOut();
   }
 }
@@ -90,10 +103,11 @@ async function fazerLogout() {
   u.$('login-erro').style.display = 'none';
   u.$('app-wrapper').style.display = 'none';
   u.$('login-screen').style.display = 'flex';
-  mostrarLogin();
+  mostrarLogin(); // Reseta para a tela de login
   u.toast('Sessão encerrada.');
 }
 
+// Funções de Recuperação de Senha
 function mostrarRecuperarSenha() {
   u.$('login-form').style.display = 'none';
   u.$('recovery-form').style.display = 'block';
@@ -109,9 +123,11 @@ async function enviarEmailRecuperacao(e) {
   e.preventDefault();
   const email = u.$('recovery-email').value;
   const msgEl = u.$('recovery-msg');
-  // Remove o index.html se ele estiver presente na URL  
+  
+  // Captura a URL base atual (ex: https://meusite.vercel.app/ ou http://127.0.0.1:5500/)
+  // Remove o index.html se ele estiver presente na URL
   let baseUrl = window.location.href.split('?')[0].split('#')[0];
-  if (baseUrl.endsWith('index.html')) {    
+  if (baseUrl.endsWith('index.html')) {
     baseUrl = baseUrl.replace('index.html', '');
   }
   if (!baseUrl.endsWith('/')) {
@@ -119,6 +135,8 @@ async function enviarEmailRecuperacao(e) {
   }
   
   const redirectUrl = baseUrl + 'redefinicao.html';
+  
+  console.log("Solicitando redefinição. O link levará para:", redirectUrl);
 
   const { error } = await _supabase.auth.resetPasswordForEmail(email, {
     redirectTo: redirectUrl,
@@ -152,6 +170,7 @@ const RENDER_PAGES = {
   financeiro: () => { populateFinanceiroSelects(); renderFinanceiro(); },
 };
 
+// ====== NAVIGATION ======
 function navigate(page) {
   u.$$('.page').forEach(p => p.classList.remove('active'));
   u.$$('.nav-item').forEach(n => n.classList.remove('active'));
@@ -165,6 +184,7 @@ function navigate(page) {
 
 u.$$('.nav-item').forEach(item => item.addEventListener('click', () => navigate(item.dataset.page)));
 
+// ====== DASHBOARD ======
 function renderDashboard() {
   const hoje = new Date();
   const semStart = new Date(hoje); semStart.setDate(hoje.getDate() - hoje.getDay());
@@ -218,7 +238,7 @@ function renderList(id, items, render, emptyMsg) {
 
 async function carregarTudo() {
   if (!currentUser) return;
-  // Carrega pacientes, consultas e sessões em paralelo
+  // Carrega pacientes, consultas e sessões em paralelo (Muito mais rápido)
   await Promise.all([
     carregarPacientes(),
     carregarConsultas(),
@@ -226,6 +246,7 @@ async function carregarTudo() {
   ]);
 }
 
+// ====== PACIENTES ======
 async function carregarPacientes() {
   if (!currentUser) return;
 
@@ -360,6 +381,7 @@ function renderPacientes() {
   }).join('');
 }
 
+// ====== AGENDA ======
 async function carregarConsultas() {
   if (!currentUser) return;
   const { data, error } = await _supabase
@@ -465,6 +487,7 @@ function renderConsultas() {
 
   el.innerHTML = lista.map(c => {
     const pac = state.pacientes.find(p => p.id == c.pacienteId);
+    const past = new Date(c.data + 'T' + c.hora) < new Date();
     const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     
     const statusClasses = {
@@ -499,6 +522,7 @@ function renderConsultas() {
   }).join('');
 }
 
+// ====== PRONTUÁRIO ======
 function populateProntSelect() { populatePacienteSelects(); }
 
 async function carregarProntuarios(pid) {
@@ -528,7 +552,7 @@ async function carregarAnexos(pid) {
     return;
   }
 
-  
+  // Filtra placeholders e gera links assinados
   const arquivosValidos = (data || []).filter(f => f.name !== '.emptyFolderPlaceholder');
   
   const anexosPromessas = arquivosValidos.map(async f => {
@@ -536,7 +560,7 @@ async function carregarAnexos(pid) {
       .from('documentos-pacientes')
       .createSignedUrl(`${pid}/${f.name}`, 3600);
     return {
-      nome: f.name.includes('__') ? f.name.split('__')[1] : f.name,
+      nome: f.name.includes('__') ? f.name.split('__')[1] : f.name, // Remove o timestamp para exibição
       nomeReal: f.name,
       url: urlData ? urlData.signedUrl : '#'
     };
@@ -579,7 +603,7 @@ async function fazerUploadAnexo(input) {
   u.toast(`Iniciando upload de ${files.length} arquivo(s)...`);
 
   for (const file of files) {
-    
+    // Adiciona um timestamp para evitar sobrescrita de arquivos com mesmo nome
     const timestamp = Date.now();
     const safeName = file.name.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
     const path = `${pid}/${timestamp}__${safeName}`;
@@ -589,7 +613,7 @@ async function fazerUploadAnexo(input) {
     if (error) {
       console.error("Erro no upload:", error);
       u.toast('Erro no upload: ' + error.message);
-      continue;
+      continue; // Tenta o próximo arquivo se um falhar
     }
   }
 
@@ -628,10 +652,12 @@ async function salvarProntuario() {
 
   let res;
   if (editId) {
+    // Modo Edição: Atualiza o registro existente
     res = await _supabase.from('prontuarios')
       .update({ data: dataSessao, texto: txt })
       .eq('id', editId);
   } else {
+    // Modo Criação: Insere um novo registro
     res = await _supabase.from('prontuarios').insert([{
       paciente_id: pid,
       psicologa_id: currentUser.id,
@@ -653,13 +679,16 @@ async function salvarProntuario() {
 }
 
 function editarAnotacao(pid, id) {
-  
+  // Usamos == para comparar caso o ID venha como string do HTML e seja número no estado
   const anotacao = state.prontuarios[pid].find(h => h.ts == id);
   if (!anotacao) return;
 
   u.$('pront-texto').value = anotacao.texto;
   u.$('pront-data-sessao').value = anotacao.data;
   u.$('pront-edit-id').value = id;
+  
+  // Rola a tela suavemente para o campo de texto
+  u.$('pront-texto').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function renderHistoricoProntuario(pid) {
@@ -675,6 +704,7 @@ function renderHistoricoProntuario(pid) {
     : '<p style="color:var(--ink-soft);font-size:.85rem;">Nenhuma anotação registrada.</p>';
 }
 
+// ====== FINANCEIRO ======
 async function carregarSessoes() {
   if (!currentUser) return;
   const { data, error } = await _supabase
@@ -841,6 +871,7 @@ function copiarTabela() {
   });
   navigator.clipboard.writeText(text).then(() => u.toast('Tabela copiada!'));
 }
+// ====== PERFIL ======
 function abrirModalPerfil() {
   if (!currentUser) return;
   u.$('perfil-nome').value = currentUser.nome;
@@ -878,12 +909,14 @@ async function salvarPerfil() {
   }
 }
 
+// ====== INIT ======
 (async () => {
-  
+  // --- ROTEADOR DE SEGURANÇA (Versão Ultra-Robusta) ---
   const hash = window.location.hash;
   if (hash && (hash.includes('type=recovery') || hash.includes('type=invite') || hash.includes('type=signup'))) {
+    console.log("Detectado link de autenticação. Redirecionando...");
     
-    
+    // Captura o caminho da pasta atual para evitar erro 404
     let currentPath = window.location.pathname;
     let folderPath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
     
@@ -900,9 +933,11 @@ async function salvarPerfil() {
     }
   }
 
+  // Verifica se existe uma sessão ativa no Supabase (Login normal)
   const { data: { session } } = await _supabase.auth.getSession();
 
   if (session) {
+    // Busca o perfil vinculado a esta conta
     const { data: perfil } = await _supabase
       .from('perfis')
       .select('*')
@@ -931,4 +966,3 @@ u.$('sess-paciente').addEventListener('change', function () {
   const pac = state.pacientes.find(p => p.id == this.value);
   pac && (u.$('sess-valor').value = parseFloat(pac.valor).toFixed(2));
 });
-u.$$('input[data-mask="cpf"]').forEach(el => el.addEventListener('input', () => el.value = u.fmt(el.value, 'cpf')));

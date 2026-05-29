@@ -12,7 +12,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
-<body>
+<body class="no-flash">
 
   <!-- LOGIN SCREEN -->
   <div id="login-screen" style="display:none;">
@@ -41,7 +41,7 @@
         <p id="login-erro" style="color:#c0392b;font-size:.82rem;text-align:center;margin-top:12px;display:none;"></p>
       </form>
 
-      <!-- RECUPERAR SENHA FORM (Inicialmente oculto) -->
+      
       <form id="recovery-form" style="display:none;" onsubmit="enviarEmailRecuperacao(event)">
         <div class="form-group">
           <label>E-mail de Recuperação</label>
@@ -62,10 +62,10 @@
     </div>
   </div>
 
-  <!-- APP WRAPPER -->
+  
   <div id="app-wrapper" style="display:none; width:100%;">
 
-    <!-- SIDEBAR -->
+    
     <aside id="sidebar">
       <div class="sidebar-logo">
         <img src="logo.png" alt="Lugar de Ser">
@@ -141,10 +141,10 @@
       </div>
     </aside>
 
-    <!-- MAIN CONTENT -->
+    
     <main id="main">
 
-      <!-- DASHBOARD -->
+      
       <div id="page-dashboard" class="page">
         <div class="page-header">
           <h2>Bom dia, Dra. Natália ✿</h2>
@@ -215,7 +215,7 @@
         </div>
       </div>
 
-      <!-- PACIENTES -->
+      
       <div id="page-pacientes" class="page">
         <div class="page-header">
           <h2>Cadastro de Pacientes</h2>
@@ -281,7 +281,7 @@
         </div>
       </div>
 
-      <!-- AGENDA -->
+      
       <div id="page-agenda" class="page">
         <div class="page-header">
           <h2>Agenda</h2>
@@ -308,6 +308,15 @@
               <label>Observação</label>
               <input type="text" id="ag-obs" placeholder="Ex.: online, presencial…">
             </div>
+            <div class="form-group">
+              <label>Status da Consulta *</label>
+              <select id="ag-status">
+                <option value="Agendada" selected>Agendada</option>
+                <option value="Realizada">Realizada</option>
+                <option value="Pendente">Pendente</option>
+                <option value="Atrasada">Atrasada</option>
+              </select>
+            </div>
             <button class="btn btn-primary" style="width:100%;" onclick="salvarConsulta()">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor" stroke-width="2">
@@ -331,7 +340,7 @@
         </div>
       </div>
 
-      <!-- PRONTUÁRIO -->
+      
       <div id="page-prontuario" class="page">
         <div class="page-header">
           <h2>Prontuário</h2>
@@ -389,7 +398,7 @@
         </div>
       </div>
 
-      <!-- FINANCEIRO -->
+      
       <div id="page-financeiro" class="page">
         <div class="page-header">
           <h2>Financeiro</h2>
@@ -433,7 +442,7 @@
         </div>
       </div>
 
-      <!-- RELATORIOS -->
+      
       <div id="page-relatorios" class="page">
         <div class="page-header">
           <h2>Relatórios</h2>
@@ -565,7 +574,7 @@
       </div>
     </div>
 
-    <!-- MODAL PERFIL -->
+    
     <div id="modal-perfil"
       style="display:none;position:fixed;inset:0;background:rgba(44,62,56,.35);backdrop-filter:blur(3px);z-index:100;align-items:center;justify-content:center;">
       <div
@@ -586,9 +595,9 @@
       </div>
     </div>
 
-  </div> <!-- /app-wrapper -->
+  </div> 
 
-  <!-- TOAST -->
+  
   <div id="toast" class="toast"></div>
   <script src="script.js" defer></script>
 </body>

@@ -607,7 +607,7 @@ function carregarProntuario() {
   u.$('pront-info-text').innerHTML = `<strong>${pac.nome}</strong> · CPF: ${pac.cpf}${pac.cpfResp ? ` · Resp: ${pac.cpfResp}` : ''} · Sessão: ${u.fmt(pac.valor, 'moeda')}`;
   area.style.display = 'block';
   u.$('pront-texto').value = '';
-  u.$('pront-data-sessao').value = '';
+  u.$('pront-data-sessao').value = new Date().toISOString().split('T')[0];
   carregarProntuarios(pid);
   carregarAnexos(pid);
 }
@@ -615,14 +615,17 @@ function carregarProntuario() {
 async function salvarProntuario() {
   const pid = u.$('pront-paciente').value;
   const txt = u.$('pront-texto').value.trim();
-  const data = u.$('pront-data-sessao').value.trim();
+  let dataSessao = u.$('pront-data-sessao').value.trim();
 
   if (!pid || !txt) { u.toast('Selecione o paciente e escreva a anotação.'); return; }
+
+  // Se a data estiver vazia (ou inválida no seletor), usa a data de hoje
+  if (!dataSessao) dataSessao = new Date().toISOString().split('T')[0];
 
   const { error } = await _supabase.from('prontuarios').insert([{
     paciente_id: pid,
     psicologa_id: currentUser.id,
-    data: data || new Date().toISOString().split('T')[0],
+    data: dataSessao,
     texto: txt
   }]);
 

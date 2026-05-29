@@ -176,6 +176,8 @@ function navigate(page) {
   u.$('page-' + page)?.classList.add('active');
   u.$$(`[data-page="${page}"]`)[0]?.classList.add('active');
 
+  sessionStorage.setItem('psicare_last_page', page);
+
   const renderMap = {
     dashboard: renderDashboard,
     pacientes: renderPacientes,
@@ -922,8 +924,12 @@ async function salvarPerfil() {
       u.$('login-screen').style.display = 'none';
       u.$('app-wrapper').style.display = 'flex';
       await carregarTudo();
-      renderDashboard();
+      
+      const lastPage = sessionStorage.getItem('psicare_last_page') || 'dashboard';
+      navigate(lastPage);
     }
+  } else {
+    u.$('login-screen').style.display = 'flex';
   }
 })();
 

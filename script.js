@@ -608,6 +608,7 @@ function carregarProntuario() {
   area.style.display = 'block';
   u.$('pront-texto').value = '';
   u.$('pront-data-sessao').value = new Date().toISOString().split('T')[0];
+  u.$('pront-edit-id').value = '';
   carregarProntuarios(pid);
   carregarAnexos(pid);
 }
@@ -616,27 +617,50 @@ async function salvarProntuario() {
   const pid = u.$('pront-paciente').value;
   const txt = u.$('pront-texto').value.trim();
   let dataSessao = u.$('pront-data-sessao').value;
+  const editId = u.$('pront-edit-id').value;
 
   if (!pid || !txt) { u.toast('Selecione o paciente e escreva a anotação.'); return; }
 
   if (!dataSessao) dataSessao = new Date().toISOString().split('T')[0];
 
-  const { error } = await _supabase.from('prontuarios').insert([{
-    paciente_id: pid,
-    psicologa_id: currentUser.id,
-    data: dataSessao,
-    texto: txt
-  }]);
+  let res;
+  if (editId) {
+    // Modo Edição: Atualiza o registro existente
+    res = await _supabase.from('prontuarios')
+      .update({ data: dataSessao, texto: txt })
+      .eq('id', editId);
+  } else {
+    // Modo Criação: Insere um novo registro
+    res = await _supabase.from('prontuarios').insert([{
+      paciente_id: pid,
+      psicologa_id: currentUser.id,
+      data: dataSessao,
+      texto: txt
+    }]);
+  }
 
-  if (error) {
-    console.error("Erro ao salvar prontuario:", error);
-    u.toast('Erro ao salvar anotação: ' + error.message);
+  if (res.error) {
+    console.error("Erro ao salvar prontuario:", res.error);
+    u.toast('Erro ao salvar anotação: ' + res.error.message);
   } else {
     u.$('pront-texto').value = '';
     u.$('pront-data-sessao').value = '';
+    u.$('pront-edit-id').value = '';
     await carregarProntuarios(pid);
-    u.toast('Anotação salva!');
+    u.toast(editId ? 'Anotação atualizada!' : 'Anotação salva!');
   }
+}
+
+function editarAnotacao(pid, id) {
+  const anotacao = state.prontuarios[pid].find(h => h.ts === id);
+  if (!anotacao) return;
+
+  u.$('pront-texto').value = anotacao.texto;
+  u.$('pront-data-sessao').value = anotacao.data;
+  u.$('pront-edit-id').value = id;
+  
+  // Rola a tela suavemente para o campo de texto
+  u.$('pront-texto').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function renderHistoricoProntuario(pid) {
@@ -644,7 +668,10 @@ function renderHistoricoProntuario(pid) {
   const el = u.$('pront-historico');
 
   el.innerHTML = hist.length ? hist.map(h => `<div style="border-bottom:1px solid var(--border);padding:14px 0;">
-    <div style="font-size:.78rem;font-weight:600;color:var(--primary);margin-bottom:5px;">📅 ${u.fmt(h.data, 'data')}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+      <div style="font-size:.78rem;font-weight:600;color:var(--primary);">📅 ${u.fmt(h.data, 'data')}</div>
+      <button class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.7rem;" onclick="editarAnotacao('${pid}', ${h.ts})">Editar</button>
+    </div>
     <p style="font-size:.88rem;line-height:1.6;white-space:pre-wrap;">${h.texto}</p></div>`).join('')
     : '<p style="color:var(--ink-soft);font-size:.85rem;">Nenhuma anotação registrada.</p>';
 }

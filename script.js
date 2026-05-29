@@ -157,17 +157,14 @@ function updateUI() {
   u.$$('.page-header h2')[0].textContent = `Bom dia, Dra. ${currentUser.nome.split(' ')[0] || 'Colega'} ✿`;
 }
 
-function loadUserData() {
-  if (!currentUser) return;
-  const saved = localStorage.getItem(currentUser.storageKey);
-  state = saved ? JSON.parse(saved) : { pacientes: [], consultas: [], sessoes: [], prontuarios: {}, anexos: {} };
-  if (!state.prontuarios) state.prontuarios = {};
-  if (!state.anexos) state.anexos = {};
-}
-
-function save() {
-  currentUser && localStorage.setItem(currentUser.storageKey, JSON.stringify(state));
-}
+// Mapa de renderização movido para fora para evitar re-alocação de memória em cada clique
+const RENDER_PAGES = {
+  dashboard: () => renderDashboard(),
+  pacientes: () => renderPacientes(),
+  agenda: () => { populatePacienteSelects(); renderConsultas(); },
+  prontuario: () => populateProntSelect(),
+  financeiro: () => { populateFinanceiroSelects(); renderFinanceiro(); },
+};
 
 // ====== NAVIGATION ======
 function navigate(page) {
@@ -178,14 +175,7 @@ function navigate(page) {
 
   sessionStorage.setItem('psicare_last_page', page);
 
-  const renderMap = {
-    dashboard: renderDashboard,
-    pacientes: renderPacientes,
-    agenda: () => { populatePacienteSelects(); renderConsultas(); },
-    prontuario: populateProntSelect,
-    financeiro: () => { populateFinanceiroSelects(); renderFinanceiro(); },
-  };
-  renderMap[page]?.();
+  RENDER_PAGES[page]?.();
 }
 
 u.$$('.nav-item').forEach(item => item.addEventListener('click', () => navigate(item.dataset.page)));
@@ -244,8 +234,9 @@ function renderList(id, items, render, emptyMsg) {
 
 async function carregarTudo() {
   if (!currentUser) return;
-  await carregarPacientes();
+  // Carrega pacientes, consultas e sessões em paralelo (Muito mais rápido)
   await Promise.all([
+    carregarPacientes(),
     carregarConsultas(),
     carregarSessoes()
   ]);

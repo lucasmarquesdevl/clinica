@@ -615,11 +615,10 @@ function carregarProntuario() {
 async function salvarProntuario() {
   const pid = u.$('pront-paciente').value;
   const txt = u.$('pront-texto').value.trim();
-  let dataSessao = u.$('pront-data-sessao').value.trim();
+  let dataSessao = u.$('pront-data-sessao').value;
 
   if (!pid || !txt) { u.toast('Selecione o paciente e escreva a anotação.'); return; }
 
-  // Se a data estiver vazia (ou inválida no seletor), usa a data de hoje
   if (!dataSessao) dataSessao = new Date().toISOString().split('T')[0];
 
   const { error } = await _supabase.from('prontuarios').insert([{

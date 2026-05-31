@@ -1,4 +1,4 @@
-import { _supabase } from './supabaseClient.js';
+import { _supabase, initSupabase } from './supabaseClient.js';
 import { state } from './state.js';
 import { u, maskCPF } from './utils.js';
 import * as Auth from './auth.js';
@@ -67,6 +67,7 @@ const RENDER_PAGES = {
 
 // --- LOGICA DE INICIALIZAÇÃO ---
 async function initApp() {
+  await initSupabase();
   const { data: { session } } = await _supabase.auth.getSession();
 
   if (session) {

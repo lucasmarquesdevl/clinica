@@ -1,4 +1,8 @@
-import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
+import { getSupabaseConfig } from './config.js';
 
-// O objeto 'supabase' é injetado pelo CDN no index.html
-export const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+export let _supabase = null;
+
+export async function initSupabase() {
+  const { SUPABASE_URL, SUPABASE_KEY } = await getSupabaseConfig();
+  _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+}

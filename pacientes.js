@@ -43,11 +43,16 @@ export function renderPacientes() {
 export async function salvarPaciente() {
   const nome = u.$('pac-nome').value.trim();
   const cpf = u.$('pac-cpf').value.trim();
+  const cpfResp = u.$('pac-cpf-resp').value.trim();
   const valor = u.$('pac-valor').value;
+  const tel = u.$('pac-tel').value.trim();
   const idx = u.$('pac-edit-idx').value;
 
   const dados = {
-    nome, cpf, valor_sessao: parseFloat(valor),
+    nome, cpf, 
+    cpf_responsavel: cpfResp,
+    valor_sessao: parseFloat(valor),
+    telefone: tel,
     psicologa_id: state.currentUser.id
   };
 
@@ -66,7 +71,7 @@ export async function salvarPaciente() {
 }
 
 export function limparFormPaciente() {
-  ['pac-nome', 'pac-cpf', 'pac-valor'].forEach(id => u.$(id).value = '');
+  ['pac-nome', 'pac-cpf', 'pac-cpf-resp', 'pac-valor', 'pac-tel'].forEach(id => u.$(id).value = '');
   u.$('pac-edit-idx').value = '';
   u.$('pac-form-title').textContent = 'Novo Paciente';
 }
@@ -75,7 +80,10 @@ export function editarPaciente(idx) {
   const p = state.pacientes[idx];
   u.$('pac-nome').value = p.nome;
   u.$('pac-cpf').value = p.cpf;
+  u.$('pac-cpf-resp').value = p.cpfResp || '';
   u.$('pac-valor').value = p.valor;
+  u.$('pac-tel').value = p.tel || '';
   u.$('pac-edit-idx').value = idx;
   u.$('pac-form-title').textContent = 'Editar Paciente';
+  window.scrollTo(0, 0);
 }

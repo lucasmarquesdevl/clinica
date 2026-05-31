@@ -11,16 +11,17 @@ export async function getSupabaseConfig() {
     return runtime;
   }
 
-  try {
-    const resp = await fetch('/api/env');
-    if (resp.ok) {
-      const env = await resp.json();
-      if (env?.SUPABASE_URL && env?.SUPABASE_KEY) {
-        return env;
+  // Apenas tenta buscar /api/env se não estivermos em localhost para evitar ruído no console
+  if (!window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
+    try {
+      const resp = await fetch('/api/env');
+      if (resp.ok) {
+        const env = await resp.json();
+        if (env?.SUPABASE_URL && env?.SUPABASE_KEY) return env;
       }
+    } catch (err) {
+      // Silencioso
     }
-  } catch (err) {
-    console.warn('Não foi possível carregar variáveis de ambiente de /api/env:', err);
   }
 
   return fallbackConfig;

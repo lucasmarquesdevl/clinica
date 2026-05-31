@@ -68,33 +68,43 @@ const RENDER_PAGES = {
 // --- LOGICA DE INICIALIZAÇÃO ---
 async function initApp() {
   try {
+    console.log("Iniciando Psicare...");
     await initSupabase();
+    
     const { data: { session } } = await _supabase.auth.getSession();
 
     if (session) {
-      // Usamos maybeSingle para não disparar erro se o perfil ainda não existir
+      console.log("Sessão encontrada para:", session.user.email);
+      
+      // Busca o perfil com tratamento de erro
       const { data: perfil, error: perfilError } = await _supabase
         .from('perfis').select('*').eq('id', session.user.id).maybeSingle();
 
-      if (!perfilError && perfil) {
+      if (perfilError) {
+        console.error("Erro de permissão no Supabase (RLS):", perfilError);
+        u.toast("Erro de acesso ao banco. Verifique o console.");
+        u.$('login-screen').style.display = 'flex';
+        return;
+      }
+
+      if (perfil) {
         state.currentUser = { ...perfil, avatar: '👩‍⚕️' };
         updateHeaderUI();
         await carregarDadosIniciais();
 
         const lastPage = sessionStorage.getItem('psicare_last_page') || 'dashboard';
-        navigate(lastPage);
-
         u.$('login-screen').style.display = 'none';
         u.$('app-wrapper').style.display = 'flex';
+        navigate(lastPage);
       } else {
-        console.error("Perfil não encontrado ou erro de permissão (RLS):", perfilError);
-        u.toast('Perfil não carregado. Verifique as permissões no banco.');
+        console.warn("Usuário logado, mas perfil não encontrado na tabela 'perfis'.");
+        u.toast("Perfil não encontrado. Redirecionando...");
+        await _supabase.auth.signOut();
         u.$('login-screen').style.display = 'flex';
-        u.$('app-wrapper').style.display = 'none';
       }
     } else {
+      console.log("Nenhuma sessão ativa. Mostrando login.");
       u.$('login-screen').style.display = 'flex';
-      u.$('app-wrapper').style.display = 'none';
     }
   } catch (err) {
     console.error("Erro crítico ao iniciar:", err);

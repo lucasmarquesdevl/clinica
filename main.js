@@ -2,8 +2,8 @@ import { _supabase } from './supabaseClient.js';
 import { state } from './state.js';
 import { u, maskCPF } from './utils.js';
 import * as Auth from './auth.js';
-import * as Pacientes from './pages/pacientes.js';
-// Importe os outros módulos aqui conforme criá-los
+import * as Pacientes from './pacientes.js';
+import * as Dashboard from './dashboard.js';
 
 // --- BRIDGE (Ponte para o escopo global) ---
 // Isso garante que o HTML index.html encontre as funções
@@ -17,6 +17,13 @@ window.salvarPaciente = Pacientes.salvarPaciente;
 window.editarPaciente = Pacientes.editarPaciente;
 window.limparFormPaciente = Pacientes.limparFormPaciente;
 window.renderPacientes = Pacientes.renderPacientes;
+
+// Mapa de funções de renderização por página
+const RENDER_PAGES = {
+  dashboard: Dashboard.renderDashboard,
+  pacientes: Pacientes.renderPacientes,
+  // Adicione os outros módulos aqui conforme criá-los (Agenda, Financeiro, etc.)
+};
 
 // --- LOGICA DE INICIALIZAÇÃO ---
 async function initApp() {
@@ -57,6 +64,10 @@ function navigate(page) {
   u.$('page-' + page)?.classList.add('active');
   u.$$(`[data-page="${page}"]`)[0]?.classList.add('active');
   sessionStorage.setItem('psicare_last_page', page);
+
+  // CHAVE DA SOLUÇÃO: Executa a função que desenha os dados na tela
+  console.log(`Navegando para: ${page}`);
+  RENDER_PAGES[page]?.();
 }
 
 function updateHeaderUI() {

@@ -28,6 +28,11 @@ export const u = {
     const el = u.$(id);
     if (el) el.style.display = 'flex';
   },
+  renderList: (id, items, render, emptyMsg) => {
+    const el = u.$(id);
+    if (!el) return;
+    el.innerHTML = items.length ? items.map(render).join('') : `<p style="color:var(--ink-soft);font-size:.85rem;">${emptyMsg}</p>`;
+  },
 };
 
 export function maskCPF(el) { el.value = u.fmt(el.value, 'cpf'); }

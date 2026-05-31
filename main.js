@@ -49,6 +49,7 @@ window.exportarExcel = Relatorios.exportarExcel;
 // Documentos Bridge
 window.carregarTemplate = Documentos.carregarTemplate;
 window.imprimirDocumento = Documentos.imprimirDocumento;
+window.visualizarDocumento = Documentos.visualizarDocumento;
 
 /** Popula todos os menus de seleção de pacientes do sistema */
 function populatePacienteSelects() {
@@ -75,7 +76,7 @@ const RENDER_PAGES = {
   prontuario: () => { populatePacienteSelects(); },
   financeiro: () => { populatePacienteSelects(); Financeiro.renderFinanceiro(); },
   relatorios: () => { /* Apenas limpa ou prepara se necessário */ },
-  documentos: () => { populatePacienteSelects(); },
+  documentos: () => { populatePacienteSelects(); Documentos.renderHistoricoDocumentos(); },
 };
 
 // --- LOGICA DE INICIALIZAÇÃO ---

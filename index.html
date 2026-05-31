@@ -591,6 +591,28 @@
             <button class="btn btn-primary" onclick="imprimirDocumento()">Imprimir / Salvar PDF</button>
           </div>
         </div>
+
+        <!-- Histórico de Documentos -->
+        <div class="card" style="max-width: 800px; margin: 24px auto 0; padding: 0; overflow: hidden;">
+          <div style="padding: 16px 20px; border-bottom: 1.5px solid var(--border);">
+            <h3 style="font-size: 1.05rem;">Histórico de Documentos Emitidos</h3>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Paciente</th>
+                  <th>Tipo</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="doc-historico-tbody">
+                <tr><td colspan="4" style="text-align:center;color:var(--ink-soft);padding:24px;">Carregando histórico...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
     </main>

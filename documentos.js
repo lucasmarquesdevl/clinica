@@ -25,7 +25,36 @@ export async function carregarDocumentos() {
     .select('*')
     .eq('psicologa_id', state.currentUser.id);
   
-  if (!error) state.documentos = data || [];
+  if (!error) {
+    state.documentos = data || [];
+    renderHistoricoDocumentos();
+  }
+}
+
+export function renderHistoricoDocumentos() {
+  const tbody = u.$('doc-historico-tbody');
+  if (!tbody) return;
+
+  if (!state.documentos || !state.documentos.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--ink-soft);padding:24px;">Nenhum documento emitido.</td></tr>';
+    return;
+  }
+
+  // Ordenar do mais novo para o mais antigo
+  const lista = [...state.documentos].sort((a, b) => new Date(b.data_emissao) - new Date(a.data_emissao));
+
+  tbody.innerHTML = lista.map(doc => {
+    const pac = state.pacientes.find(p => p.id == doc.paciente_id);
+    const dataFmt = u.fmt(doc.data_emissao, 'data');
+    const tipoFmt = TEMPLATES[doc.tipo]?.titulo || doc.tipo;
+
+    return `<tr>
+      <td>${dataFmt}</td>
+      <td><strong>${escapeHtml(pac?.nome || '—')}</strong></td>
+      <td><span class="badge badge-gray">${escapeHtml(tipoFmt)}</span></td>
+      <td><button class="btn btn-secondary btn-sm" onclick="visualizarDocumento('${doc.id}')">Visualizar</button></td>
+    </tr>`;
+  }).join('');
 }
 
 export function carregarTemplate() {
@@ -42,6 +71,17 @@ export function carregarTemplate() {
   if (pac && TEMPLATES[tipo]) {
     editor.value = TEMPLATES[tipo].texto(pac);
   }
+}
+
+export function visualizarDocumento(id) {
+  const doc = state.documentos.find(d => d.id === id);
+  if (!doc) return;
+
+  u.$('doc-paciente').value = doc.paciente_id;
+  u.$('doc-tipo').value = doc.tipo;
+  u.$('doc-editor').value = doc.conteudo;
+  u.$('doc-editor').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  u.toast('Documento carregado no editor para consulta.');
 }
 
 export async function imprimirDocumento() {

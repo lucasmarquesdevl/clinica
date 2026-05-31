@@ -1,32 +1,39 @@
-// ====== CONFIGURAÇÃO ======
+// =============================================================================
+// 1. CONFIGURAÇÃO E CONSTANTES
+// =============================================================================
 const SUPABASE_URL = 'https://ezutgtfynlvbgbqmpqyb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6dXRndGZ5bmx2YmdicW1wcXliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NDMyODcsImV4cCI6MjA5NDIxOTI4N30.' + 't1VcyLhhfe8n_l_YDUgkx6u-YGm_PpDG7lALE52loaE';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// O USERS agora é opcional, pois usaremos o Supabase Auth para gerenciar os IDs e senhas.
-const USERS = {};
-
-// ====== STATE & UTILS ======
+// =============================================================================
+// 2. ESTADO GLOBAL E UTILITÁRIOS
+// =============================================================================
 let currentUser = null;
 let state = { pacientes: [], consultas: [], sessoes: [], prontuarios: {}, anexos: {} };
 
+/** Objeto utilitário para manipulação de DOM e Formatação */
 const u = {
   $: id => document.getElementById(id),
   $$: sel => document.querySelectorAll(sel),
+  
   toast: msg => {
     const t = u.$('toast');
+    if (!t) return console.log("Toast:", msg);
     t.textContent = msg;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2500);
   },
+  
   fmt: (v, t) => {
     if (t === 'cpf') {
       let s = v.replace(/\D/g, '').slice(0, 11);
       return s.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
     }
     if (t === 'moeda') return 'R$ ' + parseFloat(v || 0).toFixed(2).replace('.', ',');
-    if (t === 'data') return v ? v.split('T')[0].split('-').reverse().join('/') : '';
+    if (t === 'data') return v ? v.split('T')[0].split('-').reverse().join('/') : '—';
+    return v;
   },
+  
   hide: (id, v = true) => {
     const el = u.$(id);
     if (el) el.style.display = v ? 'none' : 'flex';
@@ -37,12 +44,13 @@ const u = {
   },
 };
 
-function maskCPF(el) {
-  el.value = u.fmt(el.value, 'cpf');
-}
+/** Máscara de CPF em tempo real */
+function maskCPF(el) { el.value = u.fmt(el.value, 'cpf'); }
 
-// ====== LOGIN ======
-async function fazerLogin(e) {
+// =============================================================================
+// 3. SISTEMA DE AUTENTICAÇÃO
+// =============================================================================
+async function handleLogin(e) {
   e?.preventDefault?.();
   const email = u.$('login-email').value;
   const senha = u.$('login-senha').value;
@@ -64,7 +72,7 @@ async function fazerLogin(e) {
     .from('perfis')
     .select('*')
     .eq('id', data.user.id)
-    .maybeSingle(); // Usar maybeSingle evita o erro PGRST116 se não encontrar o registro
+    .maybeSingle();
 
   if (perfilError) {
     console.error("Erro ao buscar perfil no Supabase:", perfilError);
@@ -78,7 +86,6 @@ async function fazerLogin(e) {
     u.$('app-wrapper').style.display = 'flex';
     
     await carregarTudo();
-    renderDashboard();
     u.toast('Login realizado com sucesso!');
   } else {
     // Se o login no Auth deu certo mas não tem Perfil, avisamos o usuário
@@ -95,7 +102,7 @@ async function fazerLogin(e) {
   }
 }
 
-async function fazerLogout() {
+async function handleLogout() {
   await _supabase.auth.signOut();
   sessionStorage.removeItem('psicare_active_user');
   currentUser = null;
@@ -103,11 +110,10 @@ async function fazerLogout() {
   u.$('login-erro').style.display = 'none';
   u.$('app-wrapper').style.display = 'none';
   u.$('login-screen').style.display = 'flex';
-  mostrarLogin(); // Reseta para a tela de login
+  mostrarLogin();
   u.toast('Sessão encerrada.');
 }
 
-// Funções de Recuperação de Senha
 function mostrarRecuperarSenha() {
   u.$('login-form').style.display = 'none';
   u.$('recovery-form').style.display = 'block';
@@ -153,24 +159,17 @@ async function enviarEmailRecuperacao(e) {
   }
 }
 
-function updateUI() {
-  if (!currentUser) return;
-  u.$('user-nome').textContent = currentUser.nome;
-  u.$('user-crp').textContent = `Psicóloga CRP ${currentUser.crp}`;
-  u.$('user-avatar').textContent = (currentUser.nome || 'P')[0].toUpperCase();
-  u.$$('.page-header h2')[0].textContent = `Bom dia, Dra. ${currentUser.nome.split(' ')[0] || 'Colega'} ✿`;
-}
-
-// Mapa de renderização movido para fora para evitar re-alocação de memória em cada clique
+// =============================================================================
+// 4. NAVEGAÇÃO E UI GERAL
+// =============================================================================
 const RENDER_PAGES = {
-  dashboard: () => renderDashboard(),
-  pacientes: () => renderPacientes(),
+  dashboard: renderDashboard,
+  pacientes: renderPacientes,
   agenda: () => { populatePacienteSelects(); renderConsultas(); },
-  prontuario: () => populateProntSelect(),
+  prontuario: populateProntSelect,
   financeiro: () => { populateFinanceiroSelects(); renderFinanceiro(); },
 };
 
-// ====== NAVIGATION ======
 function navigate(page) {
   u.$$('.page').forEach(p => p.classList.remove('active'));
   u.$$('.nav-item').forEach(n => n.classList.remove('active'));
@@ -182,9 +181,17 @@ function navigate(page) {
   RENDER_PAGES[page]?.();
 }
 
-u.$$('.nav-item').forEach(item => item.addEventListener('click', () => navigate(item.dataset.page)));
+function updateUI() {
+  if (!currentUser) return;
+  u.$('user-nome').textContent = currentUser.nome;
+  u.$('user-crp').textContent = `Psicóloga CRP ${currentUser.crp}`;
+  u.$('user-avatar').textContent = (currentUser.nome || 'P')[0].toUpperCase();
+  u.$$('.page-header h2')[0].textContent = `Bom dia, Dra. ${currentUser.nome.split(' ')[0] || 'Colega'} ✿`;
+}
 
-// ====== DASHBOARD ======
+// =============================================================================
+// 5. MÓDULO: DASHBOARD
+// =============================================================================
 function renderDashboard() {
   const hoje = new Date();
   const semStart = new Date(hoje); semStart.setDate(hoje.getDate() - hoje.getDay());
@@ -231,22 +238,9 @@ function renderDashboard() {
   }, 'Nenhum pagamento pendente. ✓');
 }
 
-function renderList(id, items, render, emptyMsg) {
-  const el = u.$(id);
-  el.innerHTML = items.length ? items.map(render).join('') : `<p style="color:var(--ink-soft);font-size:.85rem;">${emptyMsg}</p>`;
-}
-
-async function carregarTudo() {
-  if (!currentUser) return;
-  // Carrega pacientes, consultas e sessões em paralelo (Muito mais rápido)
-  await Promise.all([
-    carregarPacientes(),
-    carregarConsultas(),
-    carregarSessoes()
-  ]);
-}
-
-// ====== PACIENTES ======
+// =============================================================================
+// 6. MÓDULO: PACIENTES (API & LÓGICA)
+// =============================================================================
 async function carregarPacientes() {
   if (!currentUser) return;
 
@@ -356,6 +350,7 @@ async function excluirPaciente(idx) {
   }
 }
 
+// --- VIEW: PACIENTES ---
 function renderPacientes() {
   const q = (u.$('pac-search')?.value || '').toLowerCase();
   const filtered = state.pacientes.filter(p => p.nome.toLowerCase().includes(q) || p.cpf.includes(q));
@@ -381,7 +376,9 @@ function renderPacientes() {
   }).join('');
 }
 
-// ====== AGENDA ======
+// =============================================================================
+// 7. MÓDULO: AGENDA
+// =============================================================================
 async function carregarConsultas() {
   if (!currentUser) return;
   const { data, error } = await _supabase
@@ -453,11 +450,12 @@ async function excluirConsulta(id) {
   }
 }
 
+/** Popula todos os menus de seleção de pacientes do sistema */
 function populatePacienteSelects() {
-  ['ag-paciente', 'sess-paciente', 'pront-paciente', 'fin-filter-pac'].forEach(id => {
-    const el = u.$(id);
-    if (!el) return;
-    const isFilter = id === 'fin-filter-pac';
+  const selectors = ['ag-paciente', 'sess-paciente', 'pront-paciente', 'fin-filter-pac'];
+  selectors.forEach(id => {
+    const el = u.$(id); if (!el) return;
+    const isFilter = id.includes('filter');
     el.innerHTML = `<option value="">${isFilter ? 'Todos os' : 'Selecione um'} paciente${isFilter ? 's' : ''}…</option>`;
     state.pacientes.forEach(p => {
       const opt = document.createElement('option');
@@ -468,6 +466,7 @@ function populatePacienteSelects() {
   });
 }
 
+// --- VIEW: AGENDA ---
 function renderConsultas() {
   const filter = u.$('ag-filter')?.value;
   const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
@@ -552,15 +551,13 @@ async function carregarAnexos(pid) {
     return;
   }
 
-  // Filtra placeholders e gera links assinados
   const arquivosValidos = (data || []).filter(f => f.name !== '.emptyFolderPlaceholder');
-  
   const anexosPromessas = arquivosValidos.map(async f => {
     const { data: urlData } = await _supabase.storage
       .from('documentos-pacientes')
       .createSignedUrl(`${pid}/${f.name}`, 3600);
     return {
-      nome: f.name.includes('__') ? f.name.split('__')[1] : f.name, // Remove o timestamp para exibição
+      nome: f.name.includes('__') ? f.name.split('__')[1] : f.name,
       nomeReal: f.name,
       url: urlData ? urlData.signedUrl : '#'
     };
@@ -603,7 +600,6 @@ async function fazerUploadAnexo(input) {
   u.toast(`Iniciando upload de ${files.length} arquivo(s)...`);
 
   for (const file of files) {
-    // Adiciona um timestamp para evitar sobrescrita de arquivos com mesmo nome
     const timestamp = Date.now();
     const safeName = file.name.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
     const path = `${pid}/${timestamp}__${safeName}`;
@@ -613,7 +609,7 @@ async function fazerUploadAnexo(input) {
     if (error) {
       console.error("Erro no upload:", error);
       u.toast('Erro no upload: ' + error.message);
-      continue; // Tenta o próximo arquivo se um falhar
+      continue;
     }
   }
 
@@ -652,12 +648,10 @@ async function salvarProntuario() {
 
   let res;
   if (editId) {
-    // Modo Edição: Atualiza o registro existente
     res = await _supabase.from('prontuarios')
       .update({ data: dataSessao, texto: txt })
       .eq('id', editId);
   } else {
-    // Modo Criação: Insere um novo registro
     res = await _supabase.from('prontuarios').insert([{
       paciente_id: pid,
       psicologa_id: currentUser.id,
@@ -679,18 +673,17 @@ async function salvarProntuario() {
 }
 
 function editarAnotacao(pid, id) {
-  // Usamos == para comparar caso o ID venha como string do HTML e seja número no estado
-  const anotacao = state.prontuarios[pid].find(h => h.ts == id);
+  const anotacao = state.prontuarios[pid]?.find(h => h.ts == id);
   if (!anotacao) return;
 
   u.$('pront-texto').value = anotacao.texto;
   u.$('pront-data-sessao').value = anotacao.data;
   u.$('pront-edit-id').value = id;
   
-  // Rola a tela suavemente para o campo de texto
   u.$('pront-texto').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+// --- VIEW: PRONTUÁRIO ---
 function renderHistoricoProntuario(pid) {
   const hist = state.prontuarios[pid] || [];
   const el = u.$('pront-historico');
@@ -704,7 +697,9 @@ function renderHistoricoProntuario(pid) {
     : '<p style="color:var(--ink-soft);font-size:.85rem;">Nenhuma anotação registrada.</p>';
 }
 
-// ====== FINANCEIRO ======
+// =============================================================================
+// 9. MÓDULO: FINANCEIRO
+// =============================================================================
 async function carregarSessoes() {
   if (!currentUser) return;
   const { data, error } = await _supabase
@@ -800,17 +795,19 @@ async function excluirSessao(id) {
   }
 }
 
-function populateFinanceiroSelects() {
-  populatePacienteSelects();
-}
+function populateFinanceiroSelects() { populatePacienteSelects(); }
 
+// --- VIEW: FINANCEIRO ---
 function renderFinanceiro() {
   const filterPac = u.$('fin-filter-pac')?.value;
   const filterStatus = u.$('fin-filter-status')?.value;
   let lista = [...state.sessoes];
 
   if (filterPac) lista = lista.filter(s => s.pacienteId == filterPac);
-  if (filterStatus) lista = lista.filter(s => s.status === filterStatus);
+  // Fix: Só filtra se o status for específico (Pago/Pendente), se for "Todos" mostra tudo
+  if (filterStatus && filterStatus !== "Todos" && filterStatus !== "") {
+    lista = lista.filter(s => s.status === filterStatus);
+  }
 
   const tbody = u.$('fin-tbody');
   if (!lista.length) {
@@ -831,7 +828,9 @@ function renderFinanceiro() {
   }).join('');
 }
 
-// ====== RELATÓRIOS ======
+// =============================================================================
+// 10. MÓDULO: RELATÓRIOS E PERFIL
+// =============================================================================
 function gerarRelatorio() {
   const { mes, ano, status } = {
     mes: u.$('rel-mes').value,
@@ -871,7 +870,7 @@ function copiarTabela() {
   });
   navigator.clipboard.writeText(text).then(() => u.toast('Tabela copiada!'));
 }
-// ====== PERFIL ======
+
 function abrirModalPerfil() {
   if (!currentUser) return;
   u.$('perfil-nome').value = currentUser.nome;
@@ -909,12 +908,33 @@ async function salvarPerfil() {
   }
 }
 
-// ====== INIT ======
+// =============================================================================
+// 11. INICIALIZAÇÃO E EVENTOS
+// =============================================================================
+
+/** Auxiliar para carregar todos os dados iniciais do banco */
+async function carregarTudo() {
+  if (!currentUser) return;
+  u.toast('Carregando dados...');
+  await Promise.all([
+    carregarPacientes(),
+    carregarConsultas(),
+    carregarSessoes()
+  ]);
+  renderDashboard();
+}
+
+/** Auxiliar para renderizar listas simples no dashboard */
+function renderList(id, items, render, emptyMsg) {
+  const el = u.$(id);
+  if (!el) return;
+  el.innerHTML = items.length ? items.map(render).join('') : `<p style="color:var(--ink-soft);font-size:.85rem;">${emptyMsg}</p>`;
+}
+
+/** Ponto de Entrada da Aplicação (IIFE) */
 (async () => {
-  // --- ROTEADOR DE SEGURANÇA (Versão Ultra-Robusta) ---
   const hash = window.location.hash;
   if (hash && (hash.includes('type=recovery') || hash.includes('type=invite') || hash.includes('type=signup'))) {
-    console.log("Detectado link de autenticação. Redirecionando...");
     
     // Captura o caminho da pasta atual para evitar erro 404
     let currentPath = window.location.pathname;
@@ -933,11 +953,9 @@ async function salvarPerfil() {
     }
   }
 
-  // Verifica se existe uma sessão ativa no Supabase (Login normal)
   const { data: { session } } = await _supabase.auth.getSession();
 
   if (session) {
-    // Busca o perfil vinculado a esta conta
     const { data: perfil } = await _supabase
       .from('perfis')
       .select('*')
@@ -961,8 +979,15 @@ async function salvarPerfil() {
   }
 })();
 
+// EVENT LISTENERS GLOBAIS
+u.$$('.nav-item').forEach(item => item.addEventListener('click', () => navigate(item.dataset.page)));
 u.$('modal-overlay').addEventListener('click', e => e.target === e.currentTarget && fecharModal());
-u.$('sess-paciente').addEventListener('change', function () {
+
+// Eventos de Login/Logout
+u.$('login-form')?.addEventListener('submit', handleLogin);
+u.$('recovery-form')?.addEventListener('submit', enviarEmailRecuperacao);
+
+u.$('sess-paciente')?.addEventListener('change', function () {
   const pac = state.pacientes.find(p => p.id == this.value);
   pac && (u.$('sess-valor').value = parseFloat(pac.valor).toFixed(2));
 });

@@ -4,6 +4,9 @@ import { u, maskCPF } from './utils.js';
 import * as Auth from './auth.js';
 import * as Pacientes from './pacientes.js';
 import * as Dashboard from './dashboard.js';
+import * as Agenda from './agenda.js';
+import * as Financeiro from './financeiro.js';
+import * as Prontuario from './prontuario.js';
 
 // --- BRIDGE (Ponte para o escopo global) ---
 // Isso garante que o HTML index.html encontre as funções
@@ -17,6 +20,24 @@ window.salvarPaciente = Pacientes.salvarPaciente;
 window.editarPaciente = Pacientes.editarPaciente;
 window.limparFormPaciente = Pacientes.limparFormPaciente;
 window.renderPacientes = Pacientes.renderPacientes;
+
+// Agenda & Prontuário Bridge
+window.salvarConsulta = Agenda.salvarConsulta;
+window.alterarStatusConsulta = Agenda.alterarStatusConsulta;
+window.excluirConsulta = Agenda.excluirConsulta;
+window.carregarProntuario = Prontuario.carregarProntuario;
+window.salvarProntuario = Prontuario.salvarProntuario;
+window.editarAnotacao = Prontuario.editarAnotacao;
+window.fazerUploadAnexo = Prontuario.fazerUploadAnexo;
+window.excluirAnexo = Prontuario.excluirAnexo;
+
+// Financeiro Bridge
+window.abrirModalSessao = Financeiro.abrirModalSessao;
+window.fecharModal = Financeiro.fecharModal;
+window.salvarSessao = Financeiro.salvarSessao;
+window.toggleStatus = Financeiro.toggleStatus;
+window.toggleReceita = Financeiro.toggleReceita;
+window.excluirSessao = Financeiro.excluirSessao;
 
 /** Popula todos os menus de seleção de pacientes do sistema */
 function populatePacienteSelects() {
@@ -39,9 +60,9 @@ window.populatePacienteSelects = populatePacienteSelects;
 const RENDER_PAGES = {
   dashboard: Dashboard.renderDashboard,
   pacientes: Pacientes.renderPacientes,
-  agenda: () => { populatePacienteSelects(); },
+  agenda: () => { populatePacienteSelects(); Agenda.renderConsultas(); },
   prontuario: () => { populatePacienteSelects(); },
-  financeiro: () => { populatePacienteSelects(); },
+  financeiro: () => { populatePacienteSelects(); Financeiro.renderFinanceiro(); },
 };
 
 // --- LOGICA DE INICIALIZAÇÃO ---
@@ -72,6 +93,8 @@ async function carregarDadosIniciais() {
   u.toast('Carregando consultório...');
   await Promise.all([
     Pacientes.carregarPacientes(),
+    Agenda.carregarConsultas(),
+    Financeiro.carregarSessoes()
   ]);
   populatePacienteSelects();
 }

@@ -4,15 +4,30 @@ import { state } from './state.js';
 
 export async function handleLogin(e) {
   e?.preventDefault?.();
-  const email = u.$('login-email').value;
-  const senha = u.$('login-senha').value;
+  const email = u.$('login-email').value.trim();
+  const senha = u.$('login-senha').value.trim();
   const erroEl = u.$('login-erro');
+
+  if (!email || !senha) {
+    u.toast("Preencha e-mail e senha.");
+    return;
+  }
 
   const { data, error } = await _supabase.auth.signInWithPassword({ email, password: senha });
 
   if (error) {
-    erroEl.textContent = "E-mail ou senha incorretos.";
+    let msg = "Erro ao entrar.";
+    
+    // Tratamento amigável de erros do Supabase
+    if (error.status === 400 || error.message.includes("Invalid login credentials")) {
+      msg = "E-mail ou senha incorretos.";
+    } else if (error.message.includes("Email not confirmed")) {
+      msg = "Por favor, confirme seu e-mail no link enviado para sua caixa de entrada.";
+    }
+    
+    erroEl.textContent = msg || error.message;
     erroEl.style.display = 'block';
+    console.error("Erro de Autenticação Supabase:", error);
     return;
   }
 
@@ -25,7 +40,7 @@ export async function handleLogin(e) {
     window.dispatchEvent(new CustomEvent('auth:success'));
     u.toast('Bem-vinda!');
   } else {
-    erroEl.textContent = "Perfil não encontrado.";
+    erroEl.textContent = "Login ok, mas perfil não encontrado na tabela 'perfis'.";
     erroEl.style.display = 'block';
     await _supabase.auth.signOut();
   }

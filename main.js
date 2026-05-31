@@ -97,13 +97,13 @@ async function initApp() {
         u.$('app-wrapper').style.display = 'flex';
         navigate(lastPage);
       } else {
-        console.warn("Usuário logado, mas perfil não encontrado na tabela 'perfis'.");
-        u.toast("Perfil não encontrado. Redirecionando...");
+        console.warn("Perfil não encontrado para o ID:", session.user.id);
+        u.toast("Perfil profissional não localizado.");
         await _supabase.auth.signOut();
         u.$('login-screen').style.display = 'flex';
       }
     } else {
-      console.log("Nenhuma sessão ativa. Mostrando login.");
+      u.hide('app-wrapper');
       u.$('login-screen').style.display = 'flex';
     }
   } catch (err) {

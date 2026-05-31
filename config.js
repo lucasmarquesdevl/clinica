@@ -12,11 +12,12 @@ export async function getSupabaseConfig() {
   }
 
   // Apenas tenta buscar /api/env se não estivermos em localhost para evitar ruído no console
-  if (!window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
+  // E se estivermos em um ambiente que suporte a rota /api/env
+  if (window.location.protocol.startsWith('http') && !['localhost', '127.0.0.1'].includes(window.location.hostname)) {
     try {
-      const resp = await fetch('/api/env');
+      const resp = await fetch('/api/env', { method: 'HEAD' }); // Verifica existência primeiro
       if (resp.ok) {
-        const env = await resp.json();
+        const env = await (await fetch('/api/env')).json();
         if (env?.SUPABASE_URL && env?.SUPABASE_KEY) return env;
       }
     } catch (err) {

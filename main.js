@@ -22,6 +22,7 @@ window.maskTelefone = maskTelefone;
 window.maskMoeda = maskMoeda;
 window.salvarPaciente = Pacientes.salvarPaciente;
 window.editarPaciente = Pacientes.editarPaciente;
+window.excluirPaciente = Pacientes.excluirPaciente;
 window.limparFormPaciente = Pacientes.limparFormPaciente;
 window.renderPacientes = Pacientes.renderPacientes;
 
@@ -40,6 +41,7 @@ window.abrirModalSessao = Financeiro.abrirModalSessao;
 window.fecharModal = Financeiro.fecharModal;
 window.salvarSessao = Financeiro.salvarSessao;
 window.toggleStatus = Financeiro.toggleStatus;
+window.editarSessao = Financeiro.editarSessao;
 window.toggleReceita = Financeiro.toggleReceita;
 window.excluirSessao = Financeiro.excluirSessao;
 

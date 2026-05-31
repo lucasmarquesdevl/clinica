@@ -27,17 +27,20 @@ export function renderPacientes() {
   const tbody = u.$('pac-tbody');
   if (!tbody) return;
 
-  tbody.innerHTML = filtered.map((p, i) => `
+  tbody.innerHTML = filtered.map((p) => {
+    const realIdx = state.pacientes.indexOf(p);
+    return `
     <tr>
       <td><strong>${escapeHtml(p.nome)}</strong></td>
       <td>${escapeHtml(p.cpf)}</td>
       <td style="font-weight:600;">${u.fmt(p.valor || 0, 'moeda')}</td>
       <td>${escapeHtml(p.tel || '—')}</td>
-      <td>
-        <button class="btn btn-secondary btn-sm" onclick="editarPaciente(${state.pacientes.indexOf(p)})">Editar</button>
+      <td style="display:flex;gap:6px;">
+        <button class="btn btn-secondary btn-sm" onclick="editarPaciente(${realIdx})">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirPaciente(${realIdx})">✕</button>
       </td>
     </tr>
-  `).join('');
+  `}).join('');
 }
 
 export async function salvarPaciente() {
@@ -47,6 +50,11 @@ export async function salvarPaciente() {
   const valor = u.$('pac-valor').value;
   const tel = u.$('pac-tel').value.trim();
   const idx = u.$('pac-edit-idx').value;
+
+  if (!nome || !cpf || !valor) {
+    u.toast('Preencha os campos obrigatórios: Nome, CPF e Valor.');
+    return;
+  }
 
   const dados = {
     nome, cpf, 
@@ -74,6 +82,20 @@ export function limparFormPaciente() {
   ['pac-nome', 'pac-cpf', 'pac-cpf-resp', 'pac-valor', 'pac-tel'].forEach(id => u.$(id).value = '');
   u.$('pac-edit-idx').value = '';
   u.$('pac-form-title').textContent = 'Novo Paciente';
+}
+
+export async function excluirPaciente(idx) {
+  if (!confirm('Excluir este paciente permanentemente? Isso apagará também suas sessões e prontuários vinculados.')) return;
+  
+  const idDoBanco = state.pacientes[idx].id;
+  const { error } = await _supabase.from('pacientes').delete().eq('id', idDoBanco);
+
+  if (error) {
+    u.toast('Erro ao excluir: ' + error.message);
+  } else {
+    u.toast('Paciente excluído!');
+    await carregarPacientes();
+  }
 }
 
 export function editarPaciente(idx) {

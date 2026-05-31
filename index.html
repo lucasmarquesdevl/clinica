@@ -622,7 +622,8 @@
       style="display:none;position:fixed;inset:0;background:rgba(44,62,56,.35);backdrop-filter:blur(3px);z-index:100;align-items:center;justify-content:center;">
       <div
         style="background:var(--card);border-radius:16px;padding:28px;width:420px;max-width:95vw;box-shadow:var(--shadow-lg);">
-        <h3 style="font-size:1.15rem;margin-bottom:20px;">Registrar Sessão Realizada</h3>
+        <h3 style="font-size:1.15rem;margin-bottom:20px;" id="sess-form-title">Registrar Sessão Realizada</h3>
+        <input type="hidden" id="sess-edit-id" value="">
         <div class="form-group">
           <label>Paciente *</label>
           <select id="sess-paciente">

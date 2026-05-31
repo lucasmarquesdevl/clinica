@@ -18,13 +18,15 @@ export async function carregarSessoes() {
 }
 
 export function abrirModalSessao() {
+  u.$('sess-form-title').textContent = 'Registrar Sessão Realizada';
+  u.$('sess-edit-id').value = '';
   u.$('sess-data').value = new Date().toISOString().split('T')[0];
   u.$('modal-overlay').style.display = 'flex';
 }
 
 export function fecharModal() {
   u.$('modal-overlay').style.display = 'none';
-  ['sess-paciente', 'sess-valor', 'sess-data'].forEach(id => u.$(id).value = '');
+  ['sess-paciente', 'sess-valor', 'sess-data', 'sess-edit-id'].forEach(id => u.$(id).value = '');
 }
 
 export async function salvarSessao() {
@@ -32,15 +34,47 @@ export async function salvarSessao() {
   const data = u.$('sess-data').value;
   const valor = u.$('sess-valor').value;
   const status = u.$('sess-status').value;
+  const editId = u.$('sess-edit-id').value;
 
   if (!pacId || !data || !valor) { u.toast('Preencha os campos obrigatórios.'); return; }
 
-  const { error } = await _supabase.from('sessoes').insert([{
-    paciente_id: pacId, psicologa_id: state.currentUser.id, data,
-    valor: parseFloat(valor.replace(/\./g, '').replace(',', '.')), status_pagamento: status === 'Pago', status_receita: false
-  }]);
+  const dadosSessao = {
+    paciente_id: pacId, 
+    psicologa_id: state.currentUser.id, 
+    data,
+    valor: parseFloat(valor.replace(/\./g, '').replace(',', '.')), 
+    status_pagamento: status === 'Pago'
+  };
 
-  if (!error) { fecharModal(); await carregarSessoes(); u.toast('Sessão registrada!'); }
+  let res;
+  if (editId) {
+    res = await _supabase.from('sessoes').update(dadosSessao).eq('id', editId);
+  } else {
+    dadosSessao.status_receita = false;
+    res = await _supabase.from('sessoes').insert([dadosSessao]);
+  }
+
+  if (!res.error) { 
+    fecharModal(); 
+    await carregarSessoes(); 
+    u.toast(editId ? 'Sessão atualizada!' : 'Sessão registrada!'); 
+  } else {
+    u.toast('Erro ao salvar: ' + res.error.message);
+  }
+}
+
+export function editarSessao(id) {
+  const s = state.sessoes.find(sess => sess.id === id);
+  if (!s) return;
+
+  u.$('sess-form-title').textContent = 'Editar Sessão';
+  u.$('sess-edit-id').value = s.id;
+  u.$('sess-paciente').value = s.pacienteId;
+  u.$('sess-data').value = s.data;
+  u.$('sess-valor').value = u.fmt(s.valor, 'moeda').replace('R$ ', '');
+  u.$('sess-status').value = s.status;
+  
+  u.$('modal-overlay').style.display = 'flex';
 }
 
 export async function toggleStatus(id) {
@@ -81,6 +115,9 @@ export function renderFinanceiro() {
     return `<tr><td><strong>${escapeHtml(pac?.nome || '—')}</strong></td><td>${u.fmt(s.data, 'data')}</td><td style="font-weight:600;">${u.fmt(s.valor, 'moeda')}</td>
       <td><button class="badge ${s.status === 'Pago' ? 'badge-green' : 'badge-amber'}" onclick="toggleStatus('${s.id}')" style="cursor:pointer;border:none;font-size:.75rem;padding:4px 12px;">${s.status}</button></td>
       <td><label class="toggle-wrap" style="cursor:pointer;"><label class="toggle"><input type="checkbox" ${s.receitaSaude ? 'checked' : ''} onchange="toggleReceita('${s.id}')"><span class="toggle-slider"></span></label><span style="font-size:.82rem;color:${s.receitaSaude ? 'var(--primary)' : 'var(--ink-soft)'};">${s.receitaSaude ? 'Emitido' : 'Pendente'}</span></label></td>
-      <td><button class="btn btn-danger btn-sm" onclick="excluirSessao('${s.id}')">✕</button></td></tr>`;
+      <td style="display:flex;gap:6px;">
+        <button class="btn btn-secondary btn-sm" onclick="editarSessao('${s.id}')">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirSessao('${s.id}')">✕</button>
+      </td></tr>`;
   }).join('');
 }

@@ -45,7 +45,7 @@ export function renderHistoricoDocumentos() {
 
   tbody.innerHTML = lista.map(doc => {
     const pac = state.pacientes.find(p => p.id == doc.paciente_id);
-    const dataFmt = u.fmt(doc.data_emissao, 'data');
+    const dataFmt = u.fmt(doc.data_emissao, 'data-hora');
     const tipoFmt = TEMPLATES[doc.tipo]?.titulo || doc.tipo;
 
     return `<tr>
@@ -96,11 +96,14 @@ export async function imprimirDocumento() {
 
   // Salva no banco de dados antes de abrir a impressão
   u.toast('Salvando documento...');
+  const pac = state.pacientes.find(p => p.id == pacId);
+  
   const { error } = await _supabase.from('documentos').insert([{
     paciente_id: pacId,
     psicologa_id: state.currentUser.id,
     tipo: tipo,
-    conteudo: conteudo
+    conteudo: conteudo,
+    nome: pac?.nome // Salvando o nome redundante aqui
   }]);
 
   if (!error) {
@@ -139,7 +142,7 @@ export async function imprimirDocumento() {
         <div class="title">${TEMPLATES[tipo].titulo}</div>
         <div class="content">${escapeHtml(conteudo)}</div>
         <div class="footer">
-          <p>${new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+          <p>${new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })} às ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
           <div style="margin-top: 100px;">
             <div class="signature-line"></div>
             <strong>${profissional.nome}</strong><br>

@@ -17,6 +17,7 @@ export const u = {
     }
     if (t === 'moeda') return 'R$ ' + parseFloat(v || 0).toFixed(2).replace('.', ',');
     if (t === 'data') return v ? v.split('T')[0].split('-').reverse().join('/') : '—';
+    if (t === 'data-hora') return v ? new Date(v).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
     return v;
   },
   

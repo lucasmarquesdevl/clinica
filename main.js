@@ -67,25 +67,37 @@ const RENDER_PAGES = {
 
 // --- LOGICA DE INICIALIZAÇÃO ---
 async function initApp() {
-  await initSupabase();
-  const { data: { session } } = await _supabase.auth.getSession();
+  try {
+    await initSupabase();
+    const { data: { session } } = await _supabase.auth.getSession();
 
-  if (session) {
-    const { data: perfil } = await _supabase
-      .from('perfis').select('*').eq('id', session.user.id).single();
+    if (session) {
+      // Usamos maybeSingle para não disparar erro se o perfil ainda não existir
+      const { data: perfil, error: perfilError } = await _supabase
+        .from('perfis').select('*').eq('id', session.user.id).maybeSingle();
 
-    if (perfil) {
-      state.currentUser = { ...perfil, avatar: '👩‍⚕️' };
-      updateHeaderUI();
-      await carregarDadosIniciais();
-      
-      const lastPage = sessionStorage.getItem('psicare_last_page') || 'dashboard';
-      navigate(lastPage);
+      if (!perfilError && perfil) {
+        state.currentUser = { ...perfil, avatar: '👩‍⚕️' };
+        updateHeaderUI();
+        await carregarDadosIniciais();
 
-      u.$('login-screen').style.display = 'none';
-      u.$('app-wrapper').style.display = 'flex';
+        const lastPage = sessionStorage.getItem('psicare_last_page') || 'dashboard';
+        navigate(lastPage);
+
+        u.$('login-screen').style.display = 'none';
+        u.$('app-wrapper').style.display = 'flex';
+      } else {
+        console.error("Perfil não encontrado ou erro de permissão (RLS):", perfilError);
+        u.toast('Perfil não carregado. Verifique as permissões no banco.');
+        u.$('login-screen').style.display = 'flex';
+        u.$('app-wrapper').style.display = 'none';
+      }
+    } else {
+      u.$('login-screen').style.display = 'flex';
+      u.$('app-wrapper').style.display = 'none';
     }
-  } else {
+  } catch (err) {
+    console.error("Erro crítico ao iniciar:", err);
     u.$('login-screen').style.display = 'flex';
   }
 }

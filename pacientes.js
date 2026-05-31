@@ -34,7 +34,7 @@ export function renderPacientes() {
       <td style="font-weight:600;">${u.fmt(p.valor, 'moeda')}</td>
       <td>${escapeHtml(p.tel || '—')}</td>
       <td>
-        <button class="btn btn-secondary btn-sm" data-idx="${state.pacientes.indexOf(p)}" onclick="editarPaciente(this.dataset.idx)">Editar</button>
+        <button class="btn btn-secondary btn-sm" onclick="editarPaciente(${state.pacientes.indexOf(p)})">Editar</button>
       </td>
     </tr>
   `).join('');

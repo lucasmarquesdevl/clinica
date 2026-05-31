@@ -69,7 +69,7 @@ export function renderConsultas() {
     const pac = state.pacientes.find(p => p.id == c.pacienteId);
     const past = new Date(c.data + 'T' + c.hora) < new Date();
     const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-    return `<div class="appointment-card" style="${past ? 'opacity:.55;' : ''}" data-id="${c.id}">
+    return `<div class="appointment-card" style="${past ? 'opacity:.55;' : ''}">
       <div style="display:flex;align-items:center;gap:14px;">
         <div style="background:var(--sand-light);border-radius:8px;padding:8px 12px;text-align:center;min-width:52px;">
           <div style="font-size:.72rem;font-weight:700;color:var(--primary);text-transform:uppercase;">${dias[new Date(c.data + 'T12:00').getDay()]}</div>
@@ -81,27 +81,14 @@ export function renderConsultas() {
         </div>
       </div>
       <div style="display:flex;gap:12px;align-items:center;">
-        <select class="status-select" data-id="${c.id}" style="font-size:.75rem;padding:4px;border-radius:6px;border:1.5px solid var(--border);background:var(--card);">
+        <select onchange="alterarStatusConsulta('${c.id}', this.value)" style="font-size:.75rem;padding:4px;border-radius:6px;border:1.5px solid var(--border);background:var(--card);">
           <option value="Agendada" ${c.status === 'Agendada' ? 'selected' : ''}>Agendada</option>
           <option value="Realizada" ${c.status === 'Realizada' ? 'selected' : ''}>Realizada</option>
           <option value="Pendente" ${c.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
           <option value="Atrasada" ${c.status === 'Atrasada' ? 'selected' : ''}>Atrasada</option>
         </select>
-        <button class="btn btn-danger btn-sm delete-consulta" data-id="${c.id}">✕</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirConsulta('${c.id}')">✕</button>
       </div>
     </div>`;
   }).join('');
-
-  // Adicionar event listeners para segurança
-  document.querySelectorAll('.status-select').forEach(select => {
-    select.addEventListener('change', function() {
-      alterarStatusConsulta(this.dataset.id, this.value);
-    });
-  });
-
-  document.querySelectorAll('.delete-consulta').forEach(btn => {
-    btn.addEventListener('click', function() {
-      excluirConsulta(this.dataset.id);
-    });
-  });
 }

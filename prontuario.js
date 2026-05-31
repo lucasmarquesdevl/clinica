@@ -24,17 +24,10 @@ export async function carregarAnexos(pid) {
   state.anexos[pid] = await Promise.all(anexosPromessas);
   const listaEl = u.$('anexos-lista');
   if (listaEl) {
-    listaEl.innerHTML = state.anexos[pid].map((a, idx) => `<div style="display:inline-flex;align-items:center;gap:6px;background:var(--blush);border-radius:6px;padding:4px 10px;font-size:.78rem;margin:3px;" data-nome="${escapeHtml(a.nomeReal)}">
+    listaEl.innerHTML = state.anexos[pid].map(a => `<div style="display:inline-flex;align-items:center;gap:6px;background:var(--blush);border-radius:6px;padding:4px 10px;font-size:.78rem;margin:3px;">
       <a href="${a.url}" target="_blank" style="text-decoration:none;color:inherit;">📎 ${escapeHtml(a.nome)}</a>
-      <button class="delete-anexo" data-nome="${escapeHtml(a.nomeReal)}" style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:.9rem;display:flex;align-items:center;">✕</button>
+      <button onclick="excluirAnexo('${a.nomeReal}')" style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:.9rem;display:flex;align-items:center;">✕</button>
     </div>`).join('');
-
-    // Event listeners para segurança
-    document.querySelectorAll('.delete-anexo').forEach(btn => {
-      btn.addEventListener('click', function() {
-        excluirAnexo(this.dataset.nome);
-      });
-    });
   }
 }
 
@@ -123,18 +116,11 @@ export function renderHistoricoProntuario(pid) {
   const hist = state.prontuarios[pid] || [];
   const el = u.$('pront-historico');
   if (!el) return;
-  el.innerHTML = hist.length ? hist.map(h => `<div style="border-bottom:1px solid var(--border);padding:14px 0;" data-pid="${pid}" data-ts="${h.ts}">
+  el.innerHTML = hist.length ? hist.map(h => `<div style="border-bottom:1px solid var(--border);padding:14px 0;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
       <div style="font-size:.78rem;font-weight:600;color:var(--primary);">📅 ${u.fmt(h.data, 'data')}</div>
-      <button class="btn btn-secondary btn-sm edit-anotacao" data-pid="${pid}" data-ts="${h.ts}">Editar</button>
+      <button class="btn btn-secondary btn-sm" onclick="editarAnotacao('${pid}', '${h.ts}')">Editar</button>
     </div>
     <p style="font-size:.88rem;line-height:1.6;white-space:pre-wrap;">${escapeHtml(h.texto)}</p></div>`).join('')
     : '<p style="color:var(--ink-soft);font-size:.85rem;">Nenhuma anotação registrada.</p>';
-
-  // Event listeners para segurança
-  document.querySelectorAll('.edit-anotacao').forEach(btn => {
-    btn.addEventListener('click', function() {
-      editarAnotacao(this.dataset.pid, this.dataset.ts);
-    });
-  });
 }

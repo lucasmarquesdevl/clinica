@@ -80,28 +80,9 @@ export function renderFinanceiro() {
 
   tbody.innerHTML = lista.map(s => {
     const pac = state.pacientes.find(p => p.id == s.pacienteId);
-    return `<tr data-id="${s.id}"><td><strong>${escapeHtml(pac?.nome || '—')}</strong></td><td>${u.fmt(s.data, 'data')}</td><td style="font-weight:600;">${u.fmt(s.valor, 'moeda')}</td>
-      <td><button class="badge ${s.status === 'Pago' ? 'badge-green' : 'badge-amber'} toggle-status" data-id="${s.id}" style="cursor:pointer;border:none;font-size:.75rem;padding:4px 12px;">${s.status}</button></td>
-      <td><label class="toggle-wrap" style="cursor:pointer;"><label class="toggle"><input type="checkbox" class="toggle-receita" data-id="${s.id}" ${s.receitaSaude ? 'checked' : ''}><span class="toggle-slider"></span></label><span style="font-size:.82rem;color:${s.receitaSaude ? 'var(--primary)' : 'var(--ink-soft)'};">${s.receitaSaude ? 'Emitido' : 'Pendente'}</span></label></td>
-      <td><button class="btn btn-danger btn-sm delete-sessao" data-id="${s.id}">✕</button></td></tr>`;
+    return `<tr><td><strong>${escapeHtml(pac?.nome || '—')}</strong></td><td>${u.fmt(s.data, 'data')}</td><td style="font-weight:600;">${u.fmt(s.valor, 'moeda')}</td>
+      <td><button class="badge ${s.status === 'Pago' ? 'badge-green' : 'badge-amber'}" onclick="toggleStatus('${s.id}')" style="cursor:pointer;border:none;font-size:.75rem;padding:4px 12px;">${s.status}</button></td>
+      <td><label class="toggle-wrap" style="cursor:pointer;"><label class="toggle"><input type="checkbox" ${s.receitaSaude ? 'checked' : ''} onchange="toggleReceita('${s.id}')"><span class="toggle-slider"></span></label><span style="font-size:.82rem;color:${s.receitaSaude ? 'var(--primary)' : 'var(--ink-soft)'};">${s.receitaSaude ? 'Emitido' : 'Pendente'}</span></label></td>
+      <td><button class="btn btn-danger btn-sm" onclick="excluirSessao('${s.id}')">✕</button></td></tr>`;
   }).join('');
-
-  // Event listeners para segurança
-  document.querySelectorAll('.toggle-status').forEach(btn => {
-    btn.addEventListener('click', function() {
-      toggleStatus(this.dataset.id);
-    });
-  });
-
-  document.querySelectorAll('.toggle-receita').forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-      toggleReceita(this.dataset.id);
-    });
-  });
-
-  document.querySelectorAll('.delete-sessao').forEach(btn => {
-    btn.addEventListener('click', function() {
-      excluirSessao(this.dataset.id);
-    });
-  });
 }

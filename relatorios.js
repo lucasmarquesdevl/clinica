@@ -74,19 +74,20 @@ export function exportarExcel() {
 
   const mesNome = u.$('rel-mes').options[u.$('rel-mes').selectedIndex].text;
   const ano = u.$('rel-ano').value;
-  const rows = [];
-  
-  table.querySelectorAll('tr').forEach(tr => {
-    const cols = Array.from(tr.querySelectorAll('th, td')).map(td => `"${td.innerText.replace(/"/g, '""')}"`);
-    rows.push(cols.join(';'));
-  });
 
-  const csvContent = rows.join('\n');
-  const blob = new Blob(["\ufeff", csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `Relatorio_${mesNome}_${ano}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
+  // Criar um novo livro (Workbook) a partir da tabela HTML
+  const wb = XLSX.utils.table_to_book(table, { sheet: "Relatório Mensal" });
+
+  // Ajustar a largura das colunas automaticamente para ficar profissional
+  const ws = wb.Sheets["Relatório Mensal"];
+  ws['!cols'] = [
+    { wch: 35 }, // Nome do Paciente
+    { wch: 20 }, // CPF
+    { wch: 15 }, // Data
+    { wch: 12 }, // Status
+    { wch: 15 }  // Valor
+  ];
+
+  // Gerar e baixar o arquivo .xlsx real
+  XLSX.writeFile(wb, `Relatorio_${mesNome}_${ano}.xlsx`);
 }

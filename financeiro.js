@@ -2,8 +2,6 @@ import { _supabase } from './supabaseClient.js';
 import { u } from './utils.js';
 import { state } from './state.js';
 import { escapeHtml } from './security.js';
-import { escapeHtml } from './security.js';
-import { escapeHtml } from './security.js';
 
 export async function carregarSessoes() {
   if (!state.currentUser) return;

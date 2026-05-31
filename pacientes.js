@@ -1,6 +1,6 @@
-import { _supabase } from '../supabaseClient.js';
-import { u } from '../utils.js';
-import { state } from '../state.js';
+import { _supabase } from './supabaseClient.js';
+import { u } from './utils.js';
+import { state } from './state.js';
 
 export async function carregarPacientes() {
   if (!state.currentUser) return;
@@ -15,8 +15,7 @@ export async function carregarPacientes() {
       id: p.id, nome: p.nome, cpf: p.cpf, cpfResp: p.cpf_responsavel, 
       valor: p.valor_sessao, tel: p.telefone
     }));
-    renderPacientes();
-    // Dispara evento para outros módulos que dependem da lista de pacientes
+    if (typeof window.renderPacientes === 'function') window.renderPacientes();
     window.dispatchEvent(new CustomEvent('data:pacientes-loaded'));
   }
 }

@@ -18,11 +18,30 @@ window.editarPaciente = Pacientes.editarPaciente;
 window.limparFormPaciente = Pacientes.limparFormPaciente;
 window.renderPacientes = Pacientes.renderPacientes;
 
+/** Popula todos os menus de seleção de pacientes do sistema */
+function populatePacienteSelects() {
+  const selectors = ['ag-paciente', 'sess-paciente', 'pront-paciente', 'fin-filter-pac'];
+  selectors.forEach(id => {
+    const el = u.$(id); if (!el) return;
+    const isFilter = id.includes('filter');
+    el.innerHTML = `<option value="">${isFilter ? 'Todos os' : 'Selecione um'} paciente${isFilter ? 's' : ''}…</option>`;
+    state.pacientes.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.nome;
+      el.appendChild(opt);
+    });
+  });
+}
+window.populatePacienteSelects = populatePacienteSelects;
+
 // Mapa de funções de renderização por página
 const RENDER_PAGES = {
   dashboard: Dashboard.renderDashboard,
   pacientes: Pacientes.renderPacientes,
-  // Adicione os outros módulos aqui conforme criá-los (Agenda, Financeiro, etc.)
+  agenda: () => { populatePacienteSelects(); },
+  prontuario: () => { populatePacienteSelects(); },
+  financeiro: () => { populatePacienteSelects(); },
 };
 
 // --- LOGICA DE INICIALIZAÇÃO ---
@@ -53,9 +72,8 @@ async function carregarDadosIniciais() {
   u.toast('Carregando consultório...');
   await Promise.all([
     Pacientes.carregarPacientes(),
-    // Agenda.carregarConsultas(),
-    // Financeiro.carregarSessoes()
   ]);
+  populatePacienteSelects();
 }
 
 function navigate(page) {
@@ -69,6 +87,11 @@ function navigate(page) {
   console.log(`Navegando para: ${page}`);
   RENDER_PAGES[page]?.();
 }
+
+// Ouvir quando pacientes são carregados para atualizar selects
+window.addEventListener('data:pacientes-loaded', () => {
+  populatePacienteSelects();
+});
 
 function updateHeaderUI() {
   if (!state.currentUser) return;

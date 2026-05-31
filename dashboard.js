@@ -15,6 +15,7 @@ export function renderDashboard() {
     const d = new Date(c.data + 'T12:00');
     return d >= semStart && d <= semEnd;
   }).length;
+  if (u.$('stat-documentos')) u.$('stat-documentos').textContent = state.documentos.length;
 
   let recMes = 0, pendMes = 0;
   state.sessoes.forEach(s => {

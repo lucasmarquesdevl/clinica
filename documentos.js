@@ -18,6 +18,16 @@ const TEMPLATES = {
   }
 };
 
+export async function carregarDocumentos() {
+  if (!state.currentUser) return;
+  const { data, error } = await _supabase
+    .from('documentos')
+    .select('*')
+    .eq('psicologa_id', state.currentUser.id);
+  
+  if (!error) state.documentos = data || [];
+}
+
 export function carregarTemplate() {
   const tipo = u.$('doc-tipo').value;
   const pacId = u.$('doc-paciente').value;
@@ -53,7 +63,11 @@ export async function imprimirDocumento() {
     conteudo: conteudo
   }]);
 
-  if (error) console.error("Erro ao registrar no histórico:", error);
+  if (!error) {
+    await carregarDocumentos(); // Atualiza a lista local
+  } else {
+    console.error("Erro ao registrar no histórico:", error);
+  }
 
   const profissional = state.currentUser;
   const printWindow = window.open('', '_blank');

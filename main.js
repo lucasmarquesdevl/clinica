@@ -130,7 +130,8 @@ async function carregarDadosIniciais() {
   await Promise.all([
     Pacientes.carregarPacientes(),
     Agenda.carregarConsultas(),
-    Financeiro.carregarSessoes()
+    Financeiro.carregarSessoes(),
+    Documentos.carregarDocumentos()
   ]);
   populatePacienteSelects();
 }

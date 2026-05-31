@@ -4,5 +4,6 @@ export const state = {
   consultas: [],
   sessoes: [],
   prontuarios: {},
-  anexos: {}
+  anexos: {},
+  documentos: []
 };

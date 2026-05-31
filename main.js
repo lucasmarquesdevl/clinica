@@ -1,6 +1,6 @@
 import { _supabase, initSupabase } from './supabaseClient.js';
 import { state } from './state.js';
-import { u, maskCPF } from './utils.js';
+import { u, maskCPF, maskTelefone, maskMoeda } from './utils.js';
 import * as Auth from './auth.js';
 import * as Pacientes from './pacientes.js';
 import * as Dashboard from './dashboard.js';
@@ -18,6 +18,8 @@ window.mostrarRecuperarSenha = Auth.mostrarRecuperarSenha;
 window.mostrarLogin = Auth.mostrarLogin;
 window.enviarEmailRecuperacao = Auth.enviarEmailRecuperacao;
 window.maskCPF = maskCPF;
+window.maskTelefone = maskTelefone;
+window.maskMoeda = maskMoeda;
 window.salvarPaciente = Pacientes.salvarPaciente;
 window.editarPaciente = Pacientes.editarPaciente;
 window.limparFormPaciente = Pacientes.limparFormPaciente;

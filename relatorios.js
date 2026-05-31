@@ -68,43 +68,19 @@ export function exportarExcel() {
 
   const mesNome = u.$('rel-mes').options[u.$('rel-mes').selectedIndex].text;
   const ano = u.$('rel-ano').value;
+  const rows = [];
+  
+  table.querySelectorAll('tr').forEach(tr => {
+    const cols = Array.from(tr.querySelectorAll('th, td')).map(td => `"${td.innerText.replace(/"/g, '""')}"`);
+    rows.push(cols.join(';'));
+  });
 
-  // Criamos um template HTML que o Excel reconhece e permite estilização (bordas e cores)
-  const excelTemplate = `
-    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-    <head>
-      <meta charset="UTF-8">
-      <!--[if gte mso 9]>
-      <xml>
-        <x:ExcelWorkbook>
-          <x:ExcelWorksheets>
-            <x:ExcelWorksheet>
-              <x:Name>Relatório ${mesNome}</x:Name>
-              <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
-            </x:ExcelWorksheet>
-          </x:ExcelWorksheets>
-        </x:ExcelWorkbook>
-      </xml>
-      <![endif]-->
-      <style>
-        table { border-collapse: collapse; }
-        th { background-color: #b5654a; color: #ffffff; border: 0.5pt solid #000000; padding: 10px; font-family: Arial, sans-serif; }
-        td { border: 0.5pt solid #000000; padding: 8px; font-family: Arial, sans-serif; }
-      </style>
-    </head>
-    <body>
-      <h2 style="font-family: Arial, sans-serif; color: #3a3530;">Relatório de Atendimentos - ${mesNome} / ${ano}</h2>
-      <table>
-        ${table.innerHTML}
-      </table>
-    </body>
-    </html>`;
-
-  const blob = new Blob(["\uFEFF", excelTemplate], { type: 'application/vnd.ms-excel' });
+  const csvContent = rows.join('\n');
+  const blob = new Blob(["\ufeff", csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `Relatorio_${mesNome}_${ano}.xls`;
+  link.download = `Relatorio_${mesNome}_${ano}.csv`;
   link.click();
   URL.revokeObjectURL(url);
 }

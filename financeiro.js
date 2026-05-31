@@ -37,7 +37,7 @@ export async function salvarSessao() {
 
   const { error } = await _supabase.from('sessoes').insert([{
     paciente_id: pacId, psicologa_id: state.currentUser.id, data,
-    valor: parseFloat(valor), status_pagamento: status === 'Pago', status_receita: false
+    valor: parseFloat(valor.replace(/\./g, '').replace(',', '.')), status_pagamento: status === 'Pago', status_receita: false
   }]);
 
   if (!error) { fecharModal(); await carregarSessoes(); u.toast('Sessão registrada!'); }

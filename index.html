@@ -260,11 +260,11 @@
             </div>
             <div class="form-group">
               <label>Valor da Sessão (R$) *</label>
-              <input type="number" id="pac-valor" placeholder="200,00" step="0.01" min="0">
+              <input type="text" id="pac-valor" placeholder="0,00" oninput="maskMoeda(this)">
             </div>
             <div class="form-group">
               <label>Telefone</label>
-              <input type="text" id="pac-tel" placeholder="(11) 99999-9999">
+              <input type="text" id="pac-tel" placeholder="(00) 00000-0000" maxlength="15" oninput="maskTelefone(this)">
             </div>
             <div style="display:flex;gap:10px;">
               <button class="btn btn-primary" style="flex:1;" onclick="salvarPaciente()">
@@ -636,7 +636,7 @@
           </div>
           <div class="form-group">
             <label>Valor (R$) *</label>
-            <input type="number" id="sess-valor" step="0.01" min="0" placeholder="0.00">
+            <input type="text" id="sess-valor" placeholder="0,00" oninput="maskMoeda(this)">
           </div>
         </div>
         <div class="form-group">

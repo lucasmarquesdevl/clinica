@@ -53,7 +53,7 @@ export async function excluirConsulta(id) {
 export function renderConsultas() {
   const filter = u.$('ag-filter')?.value;
   const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-  let lista = [...state.consultas].sort((a, b) => (a.data + a.hora).localeCompare(b.data + b.hora));
+  let lista = [...state.consultas].sort((a, b) => (b.data + b.hora).localeCompare(a.data + a.hora));
 
   if (filter === 'today') lista = lista.filter(c => c.data === hoje.toISOString().split('T')[0]);
   if (filter === 'week') {

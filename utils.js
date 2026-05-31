@@ -37,3 +37,19 @@ export const u = {
 };
 
 export function maskCPF(el) { el.value = u.fmt(el.value, 'cpf'); }
+
+export function maskTelefone(el) {
+  let v = el.value.replace(/\D/g, "");
+  v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
+  v = v.replace(/(\d)(\d{4})$/, "$1-$2");
+  el.value = v;
+}
+
+export function maskMoeda(el) {
+  let v = el.value.replace(/\D/g, "");
+  if (v === "") return;
+  v = (v / 100).toFixed(2).replace(".", ",");
+  v = v.replace(/(\d)(\d{3})(\d{3}),/g, "$1.$2.$3,");
+  v = v.replace(/(\d)(\d{3}),/g, "$1.$2,");
+  el.value = v;
+}

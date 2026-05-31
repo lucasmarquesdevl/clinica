@@ -31,7 +31,7 @@ export function renderPacientes() {
     <tr>
       <td><strong>${escapeHtml(p.nome)}</strong></td>
       <td>${escapeHtml(p.cpf)}</td>
-      <td style="font-weight:600;">${u.fmt(p.valor, 'moeda')}</td>
+      <td style="font-weight:600;">${u.fmt(p.valor || 0, 'moeda')}</td>
       <td>${escapeHtml(p.tel || '—')}</td>
       <td>
         <button class="btn btn-secondary btn-sm" onclick="editarPaciente(${state.pacientes.indexOf(p)})">Editar</button>
@@ -51,7 +51,7 @@ export async function salvarPaciente() {
   const dados = {
     nome, cpf, 
     cpf_responsavel: cpfResp,
-    valor_sessao: parseFloat(valor),
+    valor_sessao: parseFloat(valor.replace(/\./g, '').replace(',', '.')),
     telefone: tel,
     psicologa_id: state.currentUser.id
   };
@@ -81,7 +81,7 @@ export function editarPaciente(idx) {
   u.$('pac-nome').value = p.nome;
   u.$('pac-cpf').value = p.cpf;
   u.$('pac-cpf-resp').value = p.cpfResp || '';
-  u.$('pac-valor').value = p.valor;
+  u.$('pac-valor').value = u.fmt(p.valor || 0, 'moeda').replace('R$ ', '');
   u.$('pac-tel').value = p.tel || '';
   u.$('pac-edit-idx').value = idx;
   u.$('pac-form-title').textContent = 'Editar Paciente';

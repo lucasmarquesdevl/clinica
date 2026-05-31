@@ -1,0 +1,98 @@
+import { _supabase } from './supabaseClient.js';
+import { u } from './utils.js';
+import { state } from './state.js';
+import { escapeHtml } from './security.js';
+
+const TEMPLATES = {
+  declaracao: {
+    titulo: 'Declaração de Comparecimento',
+    texto: (p) => `Declaro para os devidos fins que o(a) paciente ${p.nome}, inscrito(a) no CPF sob o nº ${p.cpf}, compareceu à sessão de psicoterapia no dia ${new Date().toLocaleDateString('pt-BR')} no horário das ____:____ às ____:____.`
+  },
+  atestado: {
+    titulo: 'Atestado Psicológico',
+    texto: (p) => `Atesto, para fins de ________________, que o(a) Sr(a). ${p.nome}, portador(a) do CPF ${p.cpf}, encontra-se em acompanhamento psicológico nesta clínica, realizando sessões com frequência _______________.`
+  },
+  recibo: {
+    titulo: 'Recibo de Pagamento',
+    texto: (p) => `Recebi de ${p.cpfResp ? p.nome + ' (Responsável: ' + p.cpfResp + ')' : p.nome}, a importância de ${u.fmt(p.valor || 0, 'moeda')}, referente à sessão de psicoterapia realizada na data de ${new Date().toLocaleDateString('pt-BR')}.`
+  }
+};
+
+export function carregarTemplate() {
+  const tipo = u.$('doc-tipo').value;
+  const pacId = u.$('doc-paciente').value;
+  const editor = u.$('doc-editor');
+
+  if (!tipo || !pacId) {
+    editor.value = '';
+    return;
+  }
+
+  const pac = state.pacientes.find(p => p.id == pacId);
+  if (pac && TEMPLATES[tipo]) {
+    editor.value = TEMPLATES[tipo].texto(pac);
+  }
+}
+
+export async function imprimirDocumento() {
+  const tipo = u.$('doc-tipo').value;
+  const pacId = u.$('doc-paciente').value;
+  const conteudo = u.$('doc-editor').value;
+  
+  if (!tipo || !conteudo) {
+    u.toast('Selecione o paciente e o tipo de documento primeiro.');
+    return;
+  }
+
+  // Salva no banco de dados antes de abrir a impressão
+  u.toast('Salvando documento...');
+  const { error } = await _supabase.from('documentos').insert([{
+    paciente_id: pacId,
+    psicologa_id: state.currentUser.id,
+    tipo: tipo,
+    conteudo: conteudo
+  }]);
+
+  if (error) console.error("Erro ao registrar no histórico:", error);
+
+  const profissional = state.currentUser;
+  const printWindow = window.open('', '_blank');
+  
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>${TEMPLATES[tipo].titulo}</title>
+        <style>
+          body { font-family: 'Georgia', serif; color: #3a3530; padding: 50px; line-height: 1.8; }
+          .header { text-align: center; border-bottom: 2px solid #e2d1c3; padding-bottom: 20px; margin-bottom: 50px; }
+          .logo { font-size: 28px; color: #b5654a; font-family: serif; font-weight: bold; }
+          .tagline { font-size: 14px; color: #8e857d; font-style: italic; letter-spacing: 1px; }
+          .title { text-align: center; font-size: 22px; margin-bottom: 40px; text-transform: uppercase; letter-spacing: 2px; }
+          .content { min-height: 350px; font-size: 18px; text-align: justify; white-space: pre-wrap; margin-bottom: 80px; }
+          .footer { text-align: center; }
+          .signature-line { border-top: 1px solid #3a3530; width: 350px; margin: 0 auto 10px; }
+          .crp { font-size: 14px; color: #555; }
+          @media print { body { padding: 20px; } .no-print { display: none; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo">Lugar de Ser ✿</div>
+          <div class="tagline">Espaço Terapêutico — Gestão Clínica</div>
+        </div>
+        <div class="title">${TEMPLATES[tipo].titulo}</div>
+        <div class="content">${escapeHtml(conteudo)}</div>
+        <div class="footer">
+          <p>${new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+          <div style="margin-top: 100px;">
+            <div class="signature-line"></div>
+            <strong>${profissional.nome}</strong><br>
+            <span class="crp">Psicóloga CRP ${profissional.crp}</span>
+          </div>
+        </div>
+        <script>setTimeout(() => { window.print(); window.close(); }, 500);</script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+}

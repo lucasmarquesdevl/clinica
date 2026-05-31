@@ -8,6 +8,7 @@ import * as Agenda from './agenda.js';
 import * as Financeiro from './financeiro.js';
 import * as Prontuario from './prontuario.js';
 import * as Relatorios from './relatorios.js';
+import * as Documentos from './documentos.js';
 
 // --- BRIDGE (Ponte para o escopo global) ---
 // Isso garante que o HTML index.html encontre as funções
@@ -45,9 +46,13 @@ window.gerarRelatorio = Relatorios.gerarRelatorio;
 window.copiarTabela = Relatorios.copiarTabela;
 window.exportarExcel = Relatorios.exportarExcel;
 
+// Documentos Bridge
+window.carregarTemplate = Documentos.carregarTemplate;
+window.imprimirDocumento = Documentos.imprimirDocumento;
+
 /** Popula todos os menus de seleção de pacientes do sistema */
 function populatePacienteSelects() {
-  const selectors = ['ag-paciente', 'sess-paciente', 'pront-paciente', 'fin-filter-pac'];
+  const selectors = ['ag-paciente', 'sess-paciente', 'pront-paciente', 'fin-filter-pac', 'doc-paciente'];
   selectors.forEach(id => {
     const el = u.$(id); if (!el) return;
     const isFilter = id.includes('filter');
@@ -70,6 +75,7 @@ const RENDER_PAGES = {
   prontuario: () => { populatePacienteSelects(); },
   financeiro: () => { populatePacienteSelects(); Financeiro.renderFinanceiro(); },
   relatorios: () => { /* Apenas limpa ou prepara se necessário */ },
+  documentos: () => { populatePacienteSelects(); },
 };
 
 // --- LOGICA DE INICIALIZAÇÃO ---

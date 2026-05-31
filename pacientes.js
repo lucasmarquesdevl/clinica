@@ -1,6 +1,7 @@
 import { _supabase } from './supabaseClient.js';
 import { u } from './utils.js';
 import { state } from './state.js';
+import { escapeHtml } from './security.js';
 
 export async function carregarPacientes() {
   if (!state.currentUser) return;
@@ -28,12 +29,12 @@ export function renderPacientes() {
 
   tbody.innerHTML = filtered.map((p, i) => `
     <tr>
-      <td><strong>${p.nome}</strong></td>
-      <td>${p.cpf}</td>
+      <td><strong>${escapeHtml(p.nome)}</strong></td>
+      <td>${escapeHtml(p.cpf)}</td>
       <td style="font-weight:600;">${u.fmt(p.valor, 'moeda')}</td>
-      <td>${p.tel || '—'}</td>
+      <td>${escapeHtml(p.tel || '—')}</td>
       <td>
-        <button class="btn btn-secondary btn-sm" onclick="editarPaciente(${state.pacientes.indexOf(p)})">Editar</button>
+        <button class="btn btn-secondary btn-sm" data-idx="${state.pacientes.indexOf(p)}" onclick="editarPaciente(this.dataset.idx)">Editar</button>
       </td>
     </tr>
   `).join('');
@@ -73,5 +74,8 @@ export function limparFormPaciente() {
 export function editarPaciente(idx) {
   const p = state.pacientes[idx];
   u.$('pac-nome').value = p.nome;
+  u.$('pac-cpf').value = p.cpf;
+  u.$('pac-valor').value = p.valor;
   u.$('pac-edit-idx').value = idx;
+  u.$('pac-form-title').textContent = 'Editar Paciente';
 }

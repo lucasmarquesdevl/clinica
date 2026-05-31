@@ -1,6 +1,7 @@
 import { _supabase } from './supabaseClient.js';
 import { u } from './utils.js';
 import { state } from './state.js';
+import { escapeHtml } from './security.js';
 
 export async function carregarConsultas() {
   if (!state.currentUser) return;
@@ -68,26 +69,39 @@ export function renderConsultas() {
     const pac = state.pacientes.find(p => p.id == c.pacienteId);
     const past = new Date(c.data + 'T' + c.hora) < new Date();
     const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-    return `<div class="appointment-card" style="${past ? 'opacity:.55;' : ''}">
+    return `<div class="appointment-card" style="${past ? 'opacity:.55;' : ''}" data-id="${c.id}">
       <div style="display:flex;align-items:center;gap:14px;">
         <div style="background:var(--sand-light);border-radius:8px;padding:8px 12px;text-align:center;min-width:52px;">
           <div style="font-size:.72rem;font-weight:700;color:var(--primary);text-transform:uppercase;">${dias[new Date(c.data + 'T12:00').getDay()]}</div>
           <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--ink);line-height:1.1;">${c.data.split('-')[2]}</div>
         </div>
         <div>
-          <div style="font-weight:600;font-size:.93rem;">${pac?.nome || '—'}</div>
-          <div style="font-size:.8rem;color:var(--ink-soft);">${c.hora} · ${c.obs || 'Consulta'}</div>
+          <div style="font-weight:600;font-size:.93rem;">${escapeHtml(pac?.nome || '—')}</div>
+          <div style="font-size:.8rem;color:var(--ink-soft);">${c.hora} · ${escapeHtml(c.obs || 'Consulta')}</div>
         </div>
       </div>
       <div style="display:flex;gap:12px;align-items:center;">
-        <select onchange="alterarStatusConsulta('${c.id}', this.value)" style="font-size:.75rem;padding:4px;border-radius:6px;border:1.5px solid var(--border);background:var(--card);">
+        <select class="status-select" data-id="${c.id}" style="font-size:.75rem;padding:4px;border-radius:6px;border:1.5px solid var(--border);background:var(--card);">
           <option value="Agendada" ${c.status === 'Agendada' ? 'selected' : ''}>Agendada</option>
           <option value="Realizada" ${c.status === 'Realizada' ? 'selected' : ''}>Realizada</option>
           <option value="Pendente" ${c.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
           <option value="Atrasada" ${c.status === 'Atrasada' ? 'selected' : ''}>Atrasada</option>
         </select>
-        <button class="btn btn-danger btn-sm" onclick="excluirConsulta('${c.id}')">✕</button>
+        <button class="btn btn-danger btn-sm delete-consulta" data-id="${c.id}">✕</button>
       </div>
     </div>`;
   }).join('');
+
+  // Adicionar event listeners para segurança
+  document.querySelectorAll('.status-select').forEach(select => {
+    select.addEventListener('change', function() {
+      alterarStatusConsulta(this.dataset.id, this.value);
+    });
+  });
+
+  document.querySelectorAll('.delete-consulta').forEach(btn => {
+    btn.addEventListener('click', function() {
+      excluirConsulta(this.dataset.id);
+    });
+  });
 }

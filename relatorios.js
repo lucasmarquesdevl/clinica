@@ -25,8 +25,13 @@ export function gerarRelatorio() {
   const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
   u.$('rel-titulo').textContent = `${meses[parseInt(mes) - 1]} / ${ano}`;
 
-  const total = lista.reduce((acc, s) => acc + (parseFloat(s.valor) || 0), 0);
-  u.$('rel-total').textContent = `Total: ${u.fmt(total, 'moeda')}`;
+  const totalPago = lista.filter(s => s.status === 'Pago').reduce((acc, s) => acc + (parseFloat(s.valor) || 0), 0);
+  const totalPendente = lista.filter(s => s.status === 'Pendente').reduce((acc, s) => acc + (parseFloat(s.valor) || 0), 0);
+  
+  u.$('rel-total').innerHTML = `
+    <span style="color:var(--mint-deep)">Pago: ${u.fmt(totalPago, 'moeda')}</span> | 
+    <span style="color:#c0392b">Pendente: ${u.fmt(totalPendente, 'moeda')}</span>
+  `;
 
   const tbody = u.$('rel-tbody');
   if (!tbody) return;
@@ -38,9 +43,10 @@ export function gerarRelatorio() {
       <td>${escapeHtml(pac?.nome || '—')}</td>
       <td style="font-family:monospace;font-size:.85rem;">${escapeHtml(cpfDecl)}</td>
       <td>${u.fmt(s.data, 'data')}</td>
+      <td><span class="badge ${s.status === 'Pago' ? 'badge-green' : 'badge-amber'}" style="font-size:.7rem; padding: 2px 8px;">${s.status}</span></td>
       <td style="font-weight:600;color:var(--primary);">${u.fmt(s.valor, 'moeda')}</td>
     </tr>`;
-  }).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--ink-soft);padding:24px;">Nenhum registro para este período.</td></tr>';
+  }).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--ink-soft);padding:24px;">Nenhum registro para este período.</td></tr>';
 
   u.$('rel-resultado').style.display = 'block';
 }

@@ -499,8 +499,8 @@
                 style="font-size:.78rem;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px;">Status</label>
               <select id="rel-status"
                 style="padding:10px 14px;border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;">
-                <option value="">Todos</option>
-                <option value="Pago" selected>Apenas Pagos</option>
+                <option value="" selected>Todos</option>
+                <option value="Pago">Apenas Pagos</option>
                 <option value="Pendente">Apenas Pendentes</option>
               </select>
             </div>
@@ -547,7 +547,8 @@
                     <th>Nome do Paciente</th>
                     <th>CPF (para declaração)</th>
                     <th>Data da Consulta</th>
-                    <th>Valor Pago</th>
+                    <th>Status</th>
+                    <th>Valor</th>
                   </tr>
                 </thead>
                 <tbody id="rel-tbody"></tbody>

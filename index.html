@@ -457,10 +457,7 @@
                 style="font-size:.78rem;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px;">Mês</label>
               <select id="rel-mes"
                 style="padding:10px 14px;border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;">
-                <option value="01">Janeiro</option>
-                <option value="02">Fevereiro</option>
-                <option value="03">Março</option>
-                <option value="04">Abril</option>
+                <option value="05" selected>Maio</option>
                 <option value="05" selected>Maio</option>
                 <option value="06">Junho</option>
                 <option value="07">Julho</option>
@@ -476,8 +473,6 @@
                 style="font-size:.78rem;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px;">Ano</label>
               <select id="rel-ano"
                 style="padding:10px 14px;border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;">
-                <option value="2024">2024</option>
-                <option value="2025" selected>2025</option>
                 <option value="2026">2026</option>
               </select>
             </div>
@@ -517,6 +512,12 @@
                     d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
                 </svg>
                 Copiar tabela
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="exportarExcel()" style="background: #27ae60; color: white; border-color: #219150;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Exportar Excel
               </button>
             </div>
           </div>

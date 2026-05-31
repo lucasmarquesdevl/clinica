@@ -7,6 +7,7 @@ import * as Dashboard from './dashboard.js';
 import * as Agenda from './agenda.js';
 import * as Financeiro from './financeiro.js';
 import * as Prontuario from './prontuario.js';
+import * as Relatorios from './relatorios.js';
 
 // --- BRIDGE (Ponte para o escopo global) ---
 // Isso garante que o HTML index.html encontre as funções
@@ -39,6 +40,11 @@ window.toggleStatus = Financeiro.toggleStatus;
 window.toggleReceita = Financeiro.toggleReceita;
 window.excluirSessao = Financeiro.excluirSessao;
 
+// Relatórios Bridge
+window.gerarRelatorio = Relatorios.gerarRelatorio;
+window.copiarTabela = Relatorios.copiarTabela;
+window.exportarExcel = Relatorios.exportarExcel;
+
 /** Popula todos os menus de seleção de pacientes do sistema */
 function populatePacienteSelects() {
   const selectors = ['ag-paciente', 'sess-paciente', 'pront-paciente', 'fin-filter-pac'];
@@ -63,6 +69,7 @@ const RENDER_PAGES = {
   agenda: () => { populatePacienteSelects(); Agenda.renderConsultas(); },
   prontuario: () => { populatePacienteSelects(); },
   financeiro: () => { populatePacienteSelects(); Financeiro.renderFinanceiro(); },
+  relatorios: () => { /* Apenas limpa ou prepara se necessário */ },
 };
 
 // --- LOGICA DE INICIALIZAÇÃO ---

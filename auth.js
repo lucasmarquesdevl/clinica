@@ -21,19 +21,17 @@ export async function handleLogin(e) {
   const { data, error } = await _supabase.auth.signInWithPassword({ email, password: senha });
 
   if (error) {
-    let msg = error.message;
-    
-    // Tratamento amigável de erros do Supabase
-    if (msg.includes("Invalid login credentials")) {
-      msg = "E-mail ou senha incorretos.";
-    } else if (msg.includes("Email not confirmed")) {
+    let msg = "E-mail ou senha incorretos.";
+
+    if (error.message.includes("Email not confirmed")) {
       msg = "Por favor, confirme seu e-mail no link enviado para sua caixa de entrada.";
-    } else if (msg.includes("Invalid API key")) {
-      msg = "Erro crítico: Chave de API inválida. Verifique as configurações.";
+    } else if (error.message.includes("Invalid API key")) {
+      msg = "Erro de configuração: Chave de API inválida.";
     }
     
     erroEl.textContent = msg;
     erroEl.style.display = 'block';
+    console.warn("Falha na autenticação:", error.message);
     return;
   }
 

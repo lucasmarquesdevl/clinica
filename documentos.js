@@ -65,7 +65,8 @@ export async function imprimirDocumento() {
         <style>
           body { font-family: 'Georgia', serif; color: #3a3530; padding: 50px; line-height: 1.8; }
           .header { text-align: center; border-bottom: 2px solid #e2d1c3; padding-bottom: 20px; margin-bottom: 50px; }
-          .logo { font-size: 28px; color: #b5654a; font-family: serif; font-weight: bold; }
+          .logo-img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
+          .logo-text { font-size: 24px; color: #b5654a; font-family: serif; font-weight: bold; margin-top: 5px; }
           .tagline { font-size: 14px; color: #8e857d; font-style: italic; letter-spacing: 1px; }
           .title { text-align: center; font-size: 22px; margin-bottom: 40px; text-transform: uppercase; letter-spacing: 2px; }
           .content { min-height: 350px; font-size: 18px; text-align: justify; white-space: pre-wrap; margin-bottom: 80px; }
@@ -77,7 +78,8 @@ export async function imprimirDocumento() {
       </head>
       <body>
         <div class="header">
-          <div class="logo">Lugar de Ser ✿</div>
+          <img src="logo.png" class="logo-img" alt="Lugar de Ser">
+          <div class="logo-text">Lugar de Ser</div>
           <div class="tagline">Espaço Terapêutico — Gestão Clínica</div>
         </div>
         <div class="title">${TEMPLATES[tipo].titulo}</div>

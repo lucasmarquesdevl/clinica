@@ -13,21 +13,27 @@ export async function handleLogin(e) {
     return;
   }
 
+  if (!_supabase) {
+    u.toast("Erro: Cliente Supabase não inicializado.");
+    return;
+  }
+
   const { data, error } = await _supabase.auth.signInWithPassword({ email, password: senha });
 
   if (error) {
-    let msg = "Erro ao entrar.";
+    let msg = error.message;
     
     // Tratamento amigável de erros do Supabase
-    if (error.status === 400 || error.message.includes("Invalid login credentials")) {
+    if (msg.includes("Invalid login credentials")) {
       msg = "E-mail ou senha incorretos.";
-    } else if (error.message.includes("Email not confirmed")) {
+    } else if (msg.includes("Email not confirmed")) {
       msg = "Por favor, confirme seu e-mail no link enviado para sua caixa de entrada.";
+    } else if (msg.includes("Invalid API key")) {
+      msg = "Erro crítico: Chave de API inválida. Verifique as configurações.";
     }
     
-    erroEl.textContent = msg || error.message;
+    erroEl.textContent = msg;
     erroEl.style.display = 'block';
-    console.error("Erro de Autenticação Supabase:", error);
     return;
   }
 

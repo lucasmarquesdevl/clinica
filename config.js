@@ -25,7 +25,10 @@ export async function getSupabaseConfig() {
     }
   }
 
-  return fallbackConfig;
+  return {
+    SUPABASE_URL: fallbackConfig.SUPABASE_URL.trim(),
+    SUPABASE_KEY: fallbackConfig.SUPABASE_KEY.trim()
+  };
 }
 
 export const APP_CONFIG = { name: 'Lugar de Ser', tagline: 'Espaço Terapêutico' };

@@ -935,20 +935,21 @@ function renderList(id, items, render, emptyMsg) {
 (async () => {
   const hash = window.location.hash;
   if (hash && (hash.includes('type=recovery') || hash.includes('type=invite') || hash.includes('type=signup'))) {
-    
-    // Captura o caminho da pasta atual para evitar erro 404
-    let currentPath = window.location.pathname;
-    let folderPath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
-    
-    // Se for recuperação de senha
+    const currentPath = window.location.pathname || '/';
+    const folderPath = currentPath.endsWith('/') ? currentPath : currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+    const baseOrigin = window.location.origin;
+
     if (hash.includes('type=recovery')) {
-      window.location.href = folderPath + 'redefinicao.html' + hash;
+      const recoveryUrl = new URL('redefinicao.html', `${baseOrigin}${folderPath}`);
+      recoveryUrl.hash = hash.startsWith('#') ? hash : `#${hash}`;
+      window.location.replace(recoveryUrl.toString());
       return;
     }
-    
-    // Se for convite (signup/invite)
+
     if (hash.includes('type=invite') || hash.includes('type=signup')) {
-      window.location.href = folderPath + 'finalizar-cadastro.html' + hash;
+      const setupUrl = new URL('finalizar-cadastro.html', `${baseOrigin}${folderPath}`);
+      setupUrl.hash = hash.startsWith('#') ? hash : `#${hash}`;
+      window.location.replace(setupUrl.toString());
       return;
     }
   }

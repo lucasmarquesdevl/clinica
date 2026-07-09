@@ -681,7 +681,13 @@
 
   
   <div id="toast" class="toast"></div>
-  <script src="main.js" type="module"></script>
+  <script>
+    // Injeta o script main.js com cache-buster
+    const script = document.createElement('script');
+    script.type = 'module';
+    script.src = 'main.js?v=' + new Date().getTime();
+    document.body.appendChild(script);
+  </script>
 </body>
 
 </html>

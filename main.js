@@ -107,7 +107,10 @@ async function initApp() {
 
       if (perfil) {
         // Verifica se o perfil está incompleto (novo convite)
-        if (!perfil.nome || !perfil.crp) {
+        const isNomeInvalido = !perfil.nome || perfil.nome.trim().length < 2 || perfil.nome.toLowerCase().includes('sem nome');
+        const isCrpInvalido = !perfil.crp || perfil.crp.trim().length < 2;
+
+        if (isNomeInvalido || isCrpInvalido) {
           console.log("Perfil incompleto. Redirecionando para finalizar cadastro...");
           window.location.href = 'finalizar-cadastro.html';
           return;

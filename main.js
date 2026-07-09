@@ -106,9 +106,12 @@ async function initApp() {
       }
 
       if (perfil) {
-        // Verifica se o perfil está incompleto (novo convite)
-        const isNomeInvalido = !perfil.nome || perfil.nome.trim().length < 2 || perfil.nome.toLowerCase().includes('sem nome');
-        const isCrpInvalido = !perfil.crp || perfil.crp.trim().length < 2;
+        // Verifica se o perfil está incompleto (novo convite com dados padrão do banco)
+        const nomeStr = (perfil.nome || '').toLowerCase();
+        const crpStr = (perfil.crp || '').trim();
+        
+        const isNomeInvalido = nomeStr.length < 2 || nomeStr.includes('sem nome') || nomeStr.includes('nova psicóloga') || nomeStr.includes('(pendente)');
+        const isCrpInvalido = crpStr.length < 2 || crpStr === '00/00000';
 
         if (isNomeInvalido || isCrpInvalido) {
           console.log("Perfil incompleto. Redirecionando para finalizar cadastro...");

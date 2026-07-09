@@ -933,23 +933,18 @@ function renderList(id, items, render, emptyMsg) {
 
 /** Ponto de Entrada da Aplicação (IIFE) */
 (async () => {
-  const hash = window.location.hash;
+  const hash = window.location.hash || '';
   if (hash && (hash.includes('type=recovery') || hash.includes('type=invite') || hash.includes('type=signup'))) {
-    const currentPath = window.location.pathname || '/';
-    const folderPath = currentPath.endsWith('/') ? currentPath : currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
-    const baseOrigin = window.location.origin;
+    const origin = window.location.origin;
+    const appOrigin = (origin || 'https://lugardeser.vercel.app').replace(/\/$/, '');
 
     if (hash.includes('type=recovery')) {
-      const recoveryUrl = new URL('redefinicao.html', `${baseOrigin}${folderPath}`);
-      recoveryUrl.hash = hash.startsWith('#') ? hash : `#${hash}`;
-      window.location.replace(recoveryUrl.toString());
+      window.location.replace(`${appOrigin}/redefinicao.html${hash}`);
       return;
     }
 
     if (hash.includes('type=invite') || hash.includes('type=signup')) {
-      const setupUrl = new URL('finalizar-cadastro.html', `${baseOrigin}${folderPath}`);
-      setupUrl.hash = hash.startsWith('#') ? hash : `#${hash}`;
-      window.location.replace(setupUrl.toString());
+      window.location.replace(`${appOrigin}/finalizar-cadastro.html${hash}`);
       return;
     }
   }

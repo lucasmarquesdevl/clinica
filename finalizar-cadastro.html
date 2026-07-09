@@ -168,7 +168,7 @@
       <h1>Cadastro Finalizado!</h1>
       <p style="color: var(--ink-soft); margin-bottom: 24px;">Seu perfil profissional e senha foram configurados com
         sucesso. Agora você já pode acessar a plataforma.</p>
-      <a href="index.html" class="btn btn-primary btn-full">Ir para o Login</a>
+      <a href="/index.html" class="btn btn-primary btn-full">Ir para o Login</a>
     </div>
   </div>
 
@@ -187,8 +187,10 @@
     async function init() {
       const { data: { session } } = await _supabase.auth.getSession();
       if (!session) {
+        const currentOrigin = window.location.origin || 'https://lugardeser.vercel.app';
+        const loginUrl = `${currentOrigin}/index.html`;
         alert("Link inválido ou expirado.");
-        window.location.href = 'index.html';
+        window.location.replace(loginUrl);
       }
     }
 

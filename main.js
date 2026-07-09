@@ -106,6 +106,13 @@ async function initApp() {
       }
 
       if (perfil) {
+        // Verifica se o perfil está incompleto (novo convite)
+        if (!perfil.nome || !perfil.crp) {
+          console.log("Perfil incompleto. Redirecionando para finalizar cadastro...");
+          window.location.href = 'finalizar-cadastro.html';
+          return;
+        }
+
         state.currentUser = { ...perfil, avatar: '👩‍⚕️' };
         updateHeaderUI();
         await carregarDadosIniciais();
